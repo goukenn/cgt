@@ -1,0 +1,53 @@
+<data-schemas>
+	<Entries>
+		<Rows For="tbigk_user_info_types">
+			<Row clName="PhoneNumber" clDataType="[^0][0-9]+" clCardinality="0" clType="1" />
+			<Row clName="GSMNumber" clDataType="[^0][0-9]+" clCardinality="0" clType="1" />
+		</Rows>
+		<Rows For="tbigk_community">
+			<Row clName="facebook" clValueType="uri" />
+			<Row clName="twitter" clValueType="uri" />
+			<Row clName="googleplus" clValueType="uri" />
+		</Rows>
+	</Entries>
+	<DataDefinition TableName="tbigk_user_info_types" Description="user information types">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clName" clType="VARCHAR" clTypeLength="33" clNotNull="true" clIsUnique="true" />
+		<Column clName="clDataType" clType="VARCHAR" clTypeLength="100" clNotNull="true" clDescription="data type name or regex expression that must be used to validate" clDefault="(.)+" />
+		<Column clName="clCardinality" clType="Int" clNotNull="true" clDescription="cardinality of this value. 0 is infinite or more than 0." clDefault="0" />
+		<Column clName="clType" clType="Int" clNotNull="true" clDescription="1: regex expression to validate the data. 0: database data" clDefault="0" />
+	</DataDefinition>
+	<DataDefinition TableName="tbigk_user_infos" Description="store user's informations.">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clUser_Id" clType="Int" clNotNull="true" clIsUniqueColumnMember="true" clColumnMemberIndex="1" clLinkType="tbigk_users" />
+		<Column clName="clUserInfoType_Id" clType="Int" clNotNull="true" clIsUniqueColumnMember="true" clColumnMemberIndex="1" clLinkType="tbigk_user_info_types" />
+		<Column clName="clValue" clType="VARCHAR" clTypeLength="255" clIsUniqueColumnMember="true" clColumnMemberIndex="1" clDescription="stored data. not that if data if data length is more than 255 used a table to store that data" />
+		<Column clName="clDescription" clType="VARCHAR" clTypeLength="150" clDescription="description of that value" />
+	</DataDefinition>
+	<DataDefinition TableName="tbigk_colors" Description="common colors">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clName" clType="VARCHAR" clTypeLength="50" clNotNull="true" clIsUnique="true" />
+		<Column clName="clValue" clType="VARCHAR" clTypeLength="9" />
+	</DataDefinition>
+	<DataDefinition TableName="tbigk_mailinglist" Description="store mailing">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clEmail" clType="VARCHAR" clTypeLength="150" clNotNull="true" clIsUnique="true" />
+		<Column clName="clActive" clType="Int" clDefault="0" clNotNull="true" clDescription="0 non active" />
+	</DataDefinition>
+	<DataDefinition TableName="tbigk_community" Description="community list">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clName" clType="VARCHAR" clTypeLength="50" clNotNull="true" clIsUnique="true" clDescription="identifier of the community " />
+		<Column clName="clValueType" clType="VARCHAR" clTypeLength="10" clDescription="type of data associated to value" />
+	</DataDefinition>
+	<DataDefinition TableName="tbigk_apps" Description="stored application on this server">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clName" clType="VARCHAR" clTypeLength="50" clNotNull="true" clIsUnique="true" />
+		<Column clName="clDownloadTime" clType="VARCHAR" clTypeLength="10" />
+	</DataDefinition>
+	<DataDefinition TableName="tbigk_cookie_storages" Description="store cookies values.">
+		<Column clName="clId" clAutoIncrement="true" clIsPrimary="true" clNotNull="true" clType="Int" />
+		<Column clName="clIdentifier" clType="VARCHAR" clTypeLength="70" clNotNull="true" clIsUniqueColumnMember="true" clColumnMemberIndex="1" />
+		<Column clName="clName" clType="VARCHAR" clTypeLength="30" clNotNull="true" clIsUniqueColumnMember="true" clColumnMemberIndex="1" />
+		<Column clName="clDateTime" clType="DateTime" clInsertFunction="NOW()" clUpdateFunction="NOW()" />
+	</DataDefinition>
+</data-schemas>

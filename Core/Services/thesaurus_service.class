@@ -1,0 +1,357 @@
+<?php
+///<summary>represent thesaurus service.</summary>
+///<remark>used to get general structure definition</remark>
+class thesaurus_service extends __base_ns\base_service{
+
+	private $m_useWSKey;
+
+	public function __construct(){		
+		parent::__construct();
+		$this->m_useWSKey=1;
+	}
+	///<summary>force to used ws_key to filter from result</summary>
+	public function getUseWSkey(){
+		return $this->m_useWSKey;
+	}
+	
+	///<summary> get urn info for that specific type</summary>
+	public function getUrnInfo($type, $urn){
+		return $this->sendQuery("typeofr/{$type}/{$urn}");
+	}
+	
+	///<summary> get all available urn type for the specific type</summary>
+	public function getUrnList($index){
+		$this->setContent(2);
+		$g = $this->sendQuery("typeofr/".$index);
+		$tab = array();
+		$d = $this->toObject($g);
+		$tab[$d->spec->urn]= $d->spec->urn;
+		
+		$qt = array($d->spec);
+		
+		while($qs = array_pop($qt)){
+			if (isset($qs->spec))
+			{
+				if (!is_array($qs->spec)){
+					$urn = igk_conf_get($qs->spec, "urn");
+					if ($urn){
+						$tab[$urn]=$urn;
+						
+					}else
+						igk_wln("not array ". igk_conf_get($qs->spec, "urn"));
+				}else{
+					foreach($qs->spec as $k){
+						if (isset($k->urn)){
+							$tab[$k->urn] = $k->urn;
+						}
+						array_push($qt,$k);
+					}
+				}
+			}else{
+				if (isset($qs->urn)){
+					$tab[$qs->urn] = $qs->urn;
+				}
+			}
+		}		
+		return $tab;
+	}
+	
+	///<summary>get urn filter list</summary>
+	///<param name="id" >offer id</param>
+	///<param name="object" >if 1 return object definition</param>
+	public function getUrnFilterList($id, $object=0){
+		$this->setContent(2);
+		$g = $this->sendQuery("typeofr/".$id);//.";WS_KEY=aa0f76f6-1994-49a0-9802-40109a5eb9b4");
+		
+		// igk_wln(igk_cgt_get_last_query());
+		// igk_wln($g);
+		// igk_die(__FILE__."::".__FUNCTION__);
+		
+		
+		igk_io_w2file("d:\\temp\\filter.xml", $g);
+		
+		if ($object){
+		$tab = array();
+		$d = $this->toObject($g);
+		$tab[$d->spec->urn]= $d->spec->urn;
+		$qt = array($d->spec);
+		$only = "Category|Choice|Boolean";
+		while($qs = array_pop($qt)){
+			if (isset($qs->spec))
+			{
+				if (!is_array($qs->spec)){
+					$urn = igk_conf_get($qs->spec, "urn");
+					
+					if(strpos($only, igk_getv($qs->spec, "type", "String")) ===false)
+						continue;
+					if ($urn){
+						$tab[$urn]=$urn;						
+					}else
+						igk_wln("not array ". igk_conf_get($qs->spec, "urn"));
+				}else{
+					foreach($qs->spec as $k){
+						array_push($qt, $k);
+						if (isset($k->urn)){
+							if(strpos($only, igk_getv($k, "type", "String"))===false){								
+								continue;
+							}							
+							$tab[$k->urn] = $k->urn;
+						}
+						
+					}
+				}
+			}else{
+				if (isset($qs->urn)){
+					if(strpos($only, igk_getv($qs, "type", "String")) ===false){
+						continue;
+					}	
+					$tab[$qs->urn] = $qs->urn;
+				}
+			}
+		}		
+		return $tab;
+		}
+		return $g;
+	}
+	
+	public function sendQuery($cmd=null, & $error=null){
+		$uri = igk_cgt_get_base_uri()."/".$this->getType();
+		if ($cmd){
+			$uri = implode("/", array($uri, $cmd));
+		}
+		$uri.= $this->getExtraOption();
+		$tab = array();
+		$tab["uri"]=$uri;
+		if ($this->getUseWSkey()){
+			$tab["ws_key"]=igk_cgt_get_conf("general/key");
+		}
+		$query=(object)$tab;
+		if ($this->getZip()){
+			$query->zip=1;
+		}		
+		$o= igk_cgt_send_request($query, $error);
+		return $o;
+	}
+	
+	public function getLocality($index=1){
+		$uri = igk_cgt_get_base_uri();
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/tins/{$index}",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);		
+		$o= igk_cgt_send_request($query);		
+		return $o;		
+	}
+	public function getLocalities(){
+		$uri = igk_cgt_get_base_uri();
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/tins",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);		
+		$o= igk_cgt_send_request($query);		
+		return $o;		
+	}
+	public function getSearchForLocalities($args=array()){
+		$args = $args ?? array("cp"=>"", "loc"=>"","com"=>"","prv"=>"","mdt"=>"", "pn"=>"", "mix"=>"");
+		$q = "";
+		foreach($args as $k=>$v)
+		{
+			if (!empty($v))
+				$q .= $k."/".$v."/";
+		}
+		if (!empty($q))
+			$q = "/".$q;
+		
+		$uri = igk_cgt_get_base_uri();
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/tins".$q,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);		
+		$o= igk_cgt_send_request($query);		
+		return $o;		
+	}
+	
+	///<summary>retrieve all type of structure</summary>
+	public function getTypeOf($index){		
+		$uri = igk_cgt_get_base_uri()."/thesaurus/typeofr/{$index}";
+		$uri.= $this->getExtraOption();
+		
+	
+		$query=(object)array(
+		"uri"=>$uri,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);		
+		$o= igk_cgt_send_request($query);		
+		return $o;		
+	}
+	
+	public function getAllTypes(){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/typeofr".$p,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);		
+		// igk_wln($query->uri);
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	///<summary>return all tourims agency</summary>
+	public function getTourismAgency(){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/tmdts",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	public function getTourismAgencyDetails($order){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/tmdts/{$order}",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	
+	///<summary>return all tourims agency</summary>
+	public function getNaturalPark(){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/tpns",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	
+	///<summary>return natural park details</summary>
+	public function getNaturalParkDetails($order){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+	"uri"=>$uri."/thesaurus/tpns/{$order}",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	
+	///<summary>return all tourims agency</summary>
+	public function getFieldList(){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/typeurn".$p,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	
+	///<summary>return natural park details</summary>
+	public function getFieldListDetails($order){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/typeurn/{$order}".$p,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	
+		///<summary>return all tourims agency</summary>
+	public function getPictogram(){
+		$uri = igk_cgt_get_base_uri();
+		if ($p = $this->getExtraOption())
+			$p = "/".$p;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/img",
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);				
+		$o= igk_cgt_send_request($query);
+		return $o;		
+	}
+	
+	///<summary>return type info structure definition</summary>
+	public function getTypeInfo($typeid, $urn=null){
+		
+	
+		$uri = igk_cgt_get_base_uri();
+		$p = $this->getExtraOption();		
+		if ($urn)
+			$urn = "/".$urn;
+		$query=(object)array(
+		"uri"=>$uri."/thesaurus/typeofr/{$typeid}{$urn}".$p,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);	
+	
+		$o= igk_cgt_send_request($query);		
+		return $o;
+	}
+	
+	public function viewList($t){		
+		$d = igk_createNode("div");
+		$d->addDiv()->setStyle("font-size:1.3em")->Content=igk_conf_get($t, "spec/label/[lang=fr]/value");
+		$ul = $d->addUl();
+		$ul->add("li")->Content =igk_conf_get($t, "spec/order");
+		$ul->add("li")->Content =igk_conf_get($t, "spec/urn");
+		// igk_wln($t);
+		// exit;
+		$d->RenderAJX();
+		$d = igk_createNode("table");
+		$g = igk_getv($t, "spec");
+		if (is_object($g)){
+			if(isset($g->spec))
+			foreach($g->spec as $k=>$v){
+				$tr = $d->addTr();
+				$tr->addTd()->Content = igk_conf_get($v, "label/[lang=fr]/value") ;
+				$tr->addTd()->Content = $v->urn;//($v);
+				$tr->addTd()->Content = $v->order;//($v);
+				$tr->addTd()->Content = $v->type;//($v);
+				
+				if (isset($v->spec)){
+					$tr["class"] = "+offer";
+					$n = $this->getType();
+					$tr["onclick"]="javascript:ns_igk.ajx.get('?cgt-actions=get_type/{$n}/urn/{$v->urn}', null, '#result');return false;";
+				}
+			}
+			
+		}else{
+			foreach($g as $k=>$v){
+				$tr = $d->addTr();
+				$tr->addTd()->Content = "Spec ";//($v);
+			}
+		}
+		$d->RenderAJX();
+	}
+	
+	public function view($r, $callback){		
+		$th = igk_cgt_q_to_object($r, $this->getType());
+		$s = igk_conf_get($th,"spec");
+		
+		if (is_array($s)){
+			
+			foreach($s as $k=>$v){
+				$callback($v);
+			}
+		}
+		
+		
+	}
+	
+}
+?>

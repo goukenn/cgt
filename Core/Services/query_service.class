@@ -1,0 +1,457 @@
+<?php
+
+
+
+///</summary>represent query service base  on version 3.1.23</summary>
+class query_service extends __base_ns\base_service{
+	private $m_pagined;
+	private $m_itemperpages;
+	private $m_shuffle;
+	private $m_token; //request token
+	private $m_page;  //page token
+	
+	public function getPagined(){return $this->m_pagined;}
+	public function getItemPerPage(){return $this->m_itemperpages;}
+	public function getShuffle(){return $this->m_shuffle;}
+	
+	public function getToken(){
+		return $this->m_token;
+	}
+	public function setToken($value){
+		$this->m_token = $value;
+	}
+	public function getPage(){
+		return $this->m_page;
+	}
+	public function setPage($v){
+		$this->m_page = $v;
+	}
+	
+	public function setPagined($v){
+		$this->m_pagined=$v;
+	}
+	public function setItemPerPage($v){
+		$this->m_itemperpages=$v;
+	}
+	public function setShuffle($v){
+		$this->m_shuffle=$v;
+	}
+	
+	public function getHeader($xml){
+		
+		$o = igk_createObj();
+		$inf = 0;
+		$path = "offres";
+		igk_xml_read_content($xml, function($reader, $inf) use (& $o){			
+			switch($reader->name){
+				case "offres":
+				if ($reader->hasAttrib){
+					//load attribute
+					foreach( $reader->attribs as $k=>$v){
+						$o->$k= $v;
+					}
+				}				
+				return false;			
+			}			
+			return true;
+		}, 
+		$inf);		
+		return $o;
+		
+	}
+	
+	public function __construct(){
+	
+		parent::__construct();
+		$this->setContent(igk_cgt_get_conf("default/queryContent",1));
+		$this->m_pagined=true;
+		$this->m_itemperpages = igk_cgt_get_conf("default/maxitemsperpage", 100);
+		$this->m_shuffle= igk_cgt_get_conf("default/shuffle", 1);
+	}
+	public function getType(){
+		return IGK_CGT_SRV_QUERY; 
+	}
+	
+	public function getExtraOption(){
+		$p= "";
+		if ($this->m_pagined){
+			$p.="/paginated";
+			
+			if ($this->m_token){
+				$p.="/".$this->m_token;
+				if ($this->m_page)
+					$p.="/".$this->m_page;
+					
+			}
+			else{
+			
+			$p.=";itemsperpage=".$this->getItemPerPage();
+			if ($this->getShuffle()){
+				$p.=";shuffle=1";
+			}
+			
+			}
+		}
+		$p.= parent::getExtraOption();
+		return $p;
+	}
+	public function sendKeyRequest($key, $filter=null, & $error=null){
+		$uri = igk_cgt_get_base_uri();
+		$args = array();
+		$postfield = null;
+		$vg="";
+		if (is_object($filter)){
+			if (method_exists($filter, "Render")){
+				$postfield = $filter->Render(null);
+			}else{
+				$opstfield = igk_ob_get($filter);
+			}			
+		};
+		
+		if (empty($this->m_token))
+			$vg.="/".$key;
+		$vg .= $this->getExtraOption(); //"pretty=true;nbthreads=1";		
+		$query=(object)array(
+		"uri"=>implode("/", array_merge(array($uri."/".$this->getType().$vg), $args)),
+		"ws_key"=>igk_cgt_get_conf("general/key"),
+		"post"=>($postfield)? 1:0,
+		"postfields"=>$postfield,
+		"headers"=>	array("Content-type: application/xml", "Accept:application/xml")	
+		);				
+		$s = igk_cgt_send_request($query, $errors);		
+		return $s;
+		
+	}
+	public function sendQuery($cmd=null, & $error=null){
+		
+		
+		//$xml = igk_createNode("div");
+		
+		
+		
+		if (($cmd==null) || empty($cmd) || is_string($cmd))
+			return parent::sendQuery($cmd, $error);
+		
+		$uri = igk_cgt_get_base_uri();
+		$args = array();
+		$postfield = null;
+		$vg = "";
+		if (is_object($cmd)){
+			if (method_exists($cmd, "Render")){
+				$postfield = $cmd->Render(null);
+			}else{
+				$postfield = igk_ob_get($cmd);
+			}			
+		}else if ($cmd){
+			//$vg.="/".$cmd;
+		}
+		// $postfield = <<<EOF
+// <?xml version="1.0" encoding="UTF-8"? >
+// <Query xmlns="http://pivot.tourismewallonie.be/files/xsd/pivot/3.1"
+ // xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ // xsi:schemaLocation="http://pivot.tourismewallonie.be/files/xsd/pivot/3.1 file:/D:/JAVAProjects/Wildfly/PivotWeb/src/main/resources/xsd/pivot310-import-query.xsd">
+    // <CriteriaGroup type="and">
+        // <CriteriaField field="urn:fld:typeofr" operator="in" target="value">
+            // <value>1</value>
+		// </CriteriaField>
+		// <CriteriaField field="urn:fld:adrprov" operator="equal" target="value">
+            // <value>Hainaut</value>
+        // </CriteriaField>
+		// <CriteriaField field="urn:fld:etatedit" operator="equal" target="value">
+            // <value>30</value>
+        // </CriteriaField>
+    // </CriteriaGroup>
+// </Query>
+// EOF;
+		$vg = $this->getExtraOption(); //"pretty=true;nbthreads=1";		
+		$query=(object)array(
+		"uri"=>implode("/", array_merge(array($uri."/".$this->getType().$vg), $args)),
+		"ws_key"=>igk_cgt_get_conf("general/key"),
+		"post"=>1,
+		"postfields"=>$postfield,
+		"headers"=>	array("Content-type: application/xml", "Accept:application/xml")	
+		);	
+		
+		
+		
+
+		$s =  igk_cgt_send_request($query, $errors);
+		return $s;
+		
+	}
+	public function toObject($q){	
+		$inf = igk_cgt_read_content_obj($q,"offres", -1);
+		return $inf->objects;		
+	}
+	
+	public function getUri($extra=null){
+		return "?cgt-actions=query/".$this->getType()."/".$extra;
+	}
+	
+	///<summary>get all offer from a type id</summary>
+	///<param name="id">coma separated list of type</param>
+	public function getOffers($id=null, $content=0){		
+		// $f = igk_cgt_cache_dir()."/".base64_encode("query:offer:{$id}");
+		// if (file_exists($f)){
+			// return igk_io_read_allfile($f);
+		// }
+		
+		// //Demo query request
+		// $query =igk_cgt_build_query_request(
+				// array(
+					// //"urn:fld:typeofr"=>igk_cgt_q_op("in","2"),//$id),
+					// "adrprov"=>igk_cgt_q_op("equal", "Hainaut"),
+					// "etatedit"=>igk_cgt_q_op("equal", "30"),
+					// //"urn:cat:cirkwi"=>igk_cgt_q_op("equal", "30")
+					// //"urn:fld:class"=>igk_cgt_q_op("in", "1")// //bad
+					// "urn:fld:class"=>igk_cgt_q_op("in", "urn:val:class:2ear") //good
+					// )
+				// );
+			// // igk_ilog(igk_ob_get_func(function() use($query){
+				// // igk_ilog("state");
+				// // igk_xml($query->render());
+			// // }));
+			// // exit;
+			
+		//good request		
+		$query = igk_cgt_build_query_request(array(
+			"urn:fld:typeofr"=>igk_cgt_q_op("in", $id),
+			"adrprov"=>igk_cgt_q_op("equal", "Hainaut"),
+			"etatedit"=>igk_cgt_q_op("equal", "30")
+		));
+		$this->setContent($content);
+		$b = $this->sendQuery(
+			$query, 
+			self::$ERROR
+		);		
+		return $b;
+	}
+	
+	public function sendRequest($queryrequest){
+		$b = $this->sendQuery(
+			$queryrequest, 
+			self::$ERROR
+		);		
+		return $b;		
+	}
+	///<summary>get all offers from a xml request</summary>
+	public function getOffersFromRequest($xml){
+		if (is_string($xml)){
+			$xml = igk_html_node_ObData(function()use($xml){
+				igk_wl($xml);
+			});
+		}
+		$b = $this->sendQuery(
+			$xml, 
+			self::$ERROR
+		);				
+		return $b;
+	}
+	
+	
+	public function viewBaseOffer($id){
+		
+		$c = IGK_CGT_PLUGIN_DIR."/Articles/offers/search/home/{$id}";
+		if (file_exists($c)){
+			// include($c);
+			// return null;
+		}
+		$max = igk_cgt_get_conf("maxs/itemperresume", 10);
+		$mode=1;
+		ob_start();
+		$this->setContent(2);
+		$s = $this->getOffers($id, 2);
+		$xslt = igk_createXsltNode();
+		
+		
+		// igk_wln("this content ".$this->getContent());
+		// exit;
+		// igk_io_w2file("d:\\temp\\offers.xml", $s);
+		//use paginad query content
+		$min =  0;
+		$max = 10;
+		
+		// $xslt->Content =<<<EOF
+// <xsl:template match="/">
+	// <xsl:variable name="min" select="{$min}" ></xsl:variable>
+	// <xsl:variable name="max" select="{$max}" ></xsl:variable>
+	// <xsl:variable name="total" select="count(offres/offre)" ></xsl:variable>
+	// <xsl:for-each select="offres/offre">
+		
+		// <xsl:if test="(position() >= \$min) and not(position()>\$max)" >
+			// <div>
+				// <xsl:value-of select="current()/nom" ></xsl:value-of>
+			// </div>
+		// </xsl:if>
+	// </xsl:for-each>
+	// <div> Page 	<xsl:value-of select="\$total" ></xsl:value-of>
+	// <ul style="">
+	// <xsl:for-each select="offres/offre">
+		// <xsl:variable name="page" select="round(position() div number(\$max - \$min))" ></xsl:variable>	
+		// <xsl:variable name="pagen" select="round((position() + 1) div number(\$max - \$min))" ></xsl:variable>	
+		// <xsl:if test="not(\$page = \$pagen)">
+		
+		// <xsl:choose>
+			// <xsl:when test="(position() >= \$min) and not(position()>\$max)" >
+				// <li style="display:inline-block; padding: 12px 4px; background-color:red; "><a href="/page/{\$page + 1}" ><xsl:value-of select="\$page + 1" ></xsl:value-of></a></li>							
+			// </xsl:when>
+			// <xsl:otherwise>
+				// <li style="display:inline-block; padding: 12px 4px; "><a href="/page/{\$page + 1}" ><xsl:value-of select="\$page + 1" ></xsl:value-of></a></li>							
+			// </xsl:otherwise>
+		// </xsl:choose>			
+		// </xsl:if>
+	// </xsl:for-each>
+	// </ul>
+	
+	// </div>
+// </xsl:template>
+// EOF;
+
+		
+		
+		
+		
+		
+		// $dv = igk_createNode("div");
+		// $dv->addXslt($s, $xslt->Render(), 1);
+		
+		// $s =  $dv->Render();
+		// igk_wl($s);
+		// return $s;
+		
+		
+		// exit;
+		
+		$p = igk_getr("page", 1) -1;
+		// igk_wln('max : '.$max);
+		// igk_wln('min : '.$min);
+		// igk_wln('page : '.$p);
+		
+		$inf = igk_cgt_read_content_obj($s,"offres", 10, $min * $p);
+		$inf->page= $p; //$p+1;
+		$data = $inf->objects;
+		$this->ViewList($data, $mode, $inf);
+		$s = ob_get_contents();
+		ob_clean();
+		igk_wl($s);
+		return $s;		
+	}
+	///<summary> view list </summary>
+	public function viewList($rtab, $mode=1, $settings=null){	
+		$table = null;
+		$list = null;
+		$c = 0;		
+		$node = igk_createNode("NoTagNode");
+		
+		if (is_array($rtab)){
+			$c = igk_count($rtab);
+			$list = $rtab;
+		}
+		
+		
+		if($list){			
+			$crud = igk_cgt_get_service("crud", true);
+			$max = $tmax= igk_cgt_get_conf("maxs/itemperresume", 20);
+			$sindex = 0;		
+		
+	
+			$offerinfo = (object)array(
+				"nom"=>"nom",
+				"Address"=>array("%0%, " , "")
+			);
+		
+		
+		$mapview = igk_createNode("div");
+		
+		$markers = [];
+		$pictos=[];
+		$rpictos=[];
+		
+		$img_srv = igk_cgt_get_service("img") ?? igk_die_e(3001);
+		
+		while(($max>0) && ($sindex<$c)) {
+	
+			$i = $list[$sindex++];
+			$addr = igk_conf_get($i,"adresse1");
+			
+		
+			//get pictograme uri
+			$pcu = $img_srv->getPictoUri("urn:typ:".igk_conf_get($i,"typeOffre/idTypeOffre"),24,24, 1, "FF0043");
+			if (!isset($pictos[$pcu])){
+				$pictos[$pcu] = igk_count($rpictos);
+				$rpictos[] =$pcu;
+			}
+			
+			array_push($markers, [
+			"lat"=>$addr->latitude, 
+			"lng"=>$addr->longitude, 
+			"idx"=>$pictos[$pcu],
+			"title"=>igk_conf_get($i, "nom"),
+			"target"=>"#".$i->codeCgt
+			]);
+			
+			switch($mode){
+				case 1: //array list mode
+					if ($table==null){
+						
+						$op = [];
+						$op["zoom"]=8;
+						$op["center"]=["lat"=>50.41438075875331,"lng"=> 4.904006734252908];
+						$op["markers"]= & $markers;
+						$op["iconmark"]= $img_srv->getPictoUri("urn:typ:1",24,24);
+						$op["icons"] = & $rpictos;
+						
+						//mapview
+						$mapview->addOnRenderCallback(igk_create_func_callback(function($options=null)use($op){
+							$s = igk_json_encode((object)$op);						
+							$b = igk_createNode("GoogleJSMaps",null,[$s]);
+							$b->setStyle("height: 300px");
+							$b->RenderAJX($options);
+						}));
+						$node->add($mapview);
+						
+						$dv =  $node->add("div");
+					//	$bar = $dv->addActionBar();
+						// $bar->setStyle("background-color:#4df");
+						// $bar->addABtn("#")->Content = igk_svg_use("list");
+						// $bar->addABtn("#")->Content = igk_svg_use("grid");
+						//$dv->RenderAJX();
+						
+						$table =  $node->add("div");
+						$table["class"]="cgt-q-srv";
+					}
+					
+					// $tr = $table->addTr();
+					// $tr->addTd()->addObData(function()use($i){
+						// var_dump($i);
+					// });	
+					
+					$uri = $crud->getUri("viewOfferDetails/".$i->codeCgt."&off=1");
+					
+					$table->addObData(function()use($i, $uri){
+						igk_cgt_bind_view("list_view_items.php", $i, ["uri"=>$uri]);
+					})->setClass("igk-row")->setId($i->codeCgt);				
+					
+				break;
+				default: //grid list mode
+					if ($table==null){
+						$table =  $node->add("div");
+						$table["class"]="cgt-q-srv";
+					}
+					$row = $table->addCol();
+				break;
+			}
+			$max--;
+		
+		}
+		
+		}
+		if (!$table){
+			$dv = $node->add("div");
+			$dv->addPanelBox()->Content = igk_cgt_lang("msg.noresult");			
+		}	
+		$node->RenderAJX();
+	}
+	
+}
+?>

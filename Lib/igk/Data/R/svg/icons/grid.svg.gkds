@@ -1,0 +1,21 @@
+﻿<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>06-11-2017 18:39:44</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_46114061" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_61866834">
+        <Path Closed="True" FillBrush="#FFFF" StrokeBrush="#F000" Id="Path_32371356">
+          <PointTypes>0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129</PointTypes>
+          <Points>11.15762;10.15762 40.49743;10.15762 40.49743;39.49743 11.15762;39.49743 6.655052;5.655052 45;5.655052 45;44 6.655052;44 60.50257;10.15762 89.84238;10.15762 89.84238;39.49744 60.50257;39.49744 56;5.655052 94.34495;5.655052 94.34495;44 56;44 11.15762;61.50256 40.49744;61.50256 40.49744;90.84238 11.15762;90.84238 6.655052;57 45;57 45;95.34495 6.655052;95.34495 60.50257;61.50256 89.84238;61.50256 89.84238;90.84238 60.50257;90.84238 56;57 94.34495;57 94.34495;95.34495 56;95.34495</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

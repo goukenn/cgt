@@ -1,0 +1,100 @@
+<?php
+
+abstract class base_service{
+	private $m_format; //output format
+	private $m_pretty; //is pretty
+	private $m_zip;    //output must be compressed
+	private $m_content;//the content type
+	private $m_lang;   //output language used for kml format
+	private $m_showinfo; //show additional info
+	private $m_noformat;// no format
+	private $m_resultRootNode; //the primary result node
+	
+	protected static $ERROR;
+	
+	public function setPretty($v){$this->m_pretty=$v;}
+	public function setFormat($v){ if (igk_cgt_q_is_valid_format($v)) $this->m_format=$v;}
+	public function setZip($v){ $this->m_zip=$v;}
+	public function setContent($v){ $this->m_content=$v;}
+	public function setLang($v){ $this->m_lang=$v;}
+	public function setShowInfo($v){ $this->m_showinfo = $v;}
+	public function setNoFmt($v){ $this->m_noformat = $v;}
+	
+	public function getPretty(){return $this->m_pretty;}
+	public function getFormat(){ return $this->m_format;}
+	public function getZip(){ return $this->m_zip;}
+	public function getContent(){ return $this->m_content;}
+	public function getLang(){ return $this->m_lang;}
+	public function getShowInfo(){ return $this->m_showinfo;}
+	public function getNoFmt(){ return $this->m_noformat;}
+	public function getResultRootNode(){return $this->m_resultRootNode; }
+	
+	protected function setResultRootNode($v){ $this->m_resultRootNode =$v; }
+	
+	
+	public function getUri($extra=null){
+		return "?cgt-actions=query/".$this->getServiceType()."/".$extra;
+	}
+	
+	public function __construct(){
+		$this->m_format="xml";
+		$this->m_lang = igk_cgt_get_conf("general/lang", "fr");
+		$this->m_resultRootNode = strtolower($this->getServiceType());
+		$this->m_pretty=0;
+	}
+	public function getServiceType(){
+		$tab = explode("_", basename(get_class($this)));
+		array_pop($tab);		
+		return implode("_", $tab);
+	}
+	function getType(){
+		$tab = explode("_", basename(igk_io_dir(get_class($this))));
+		array_pop($tab);		
+		return implode("_", $tab);
+	}
+	
+	public function getQueryUri(){
+		$uri = igk_cgt_get_base_uri()."/".$this->getType();
+		return $uri;
+	}
+	public function sendQuery($cmd=null, & $error=null){
+		$uri = igk_cgt_get_base_uri()."/".$this->getType();
+		if ($cmd){
+			$uri = implode("/", array($uri, $cmd));
+		}
+		$uri.= $this->getExtraOption();
+		$query=(object)array(
+		"uri"=>$uri,
+		"ws_key"=>igk_cgt_get_conf("general/key")
+		);		
+		if ($this->m_zip)
+		{
+			$query->zip=1;
+		}
+		
+		// igk_wln($query->uri . " ::: ".$query->zip);
+		$o= igk_cgt_send_request($query, $error);
+		return $o;
+	}
+	public function getExtraOption(){
+		$p = $this->m_pretty?"pretty=true;":"";
+		$c = "content=".intval($this->m_content).";";
+		if ($this->m_showinfo)
+			$p.="info=true;";
+		if ($this->m_noformat){
+			$p.="nofmt=true;";
+		}
+		return ";{$p}{$c}fmt={$this->m_format}";
+	}
+	///<summary>convert to basic query definition.last query definition</summary>
+	public function toObject($q){
+		if (is_string($q))
+			return igk_conf_load_content($q, $this->getResultRootNode());
+		return null;
+	}
+	
+	///<summary>view data</summary>
+	function viewList($tdata){	
+	}
+}
+?>

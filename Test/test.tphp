@@ -1,0 +1,23 @@
+<?php
+//test php files
+//testing php script for cgt plugins
+
+
+
+// igk_unit_test(
+// array(
+// "Name"=>"Test igk_Conf_load_content",
+// "Error"=>"igk_conf_load_content failed to parse the content",
+// "test"=>function(){
+// $g = igk_conf_load_content(<<<EOF
+// <spec urn="urn:typ:2" code="GIT" order="2"><type>Type</type><label lang="fr"><value>Gîte</value></label></spec>
+// EOF
+// ,
+// "spec");
+// if ($g)
+	// return 1;
+// return 0;
+// }));
+
+
+?>

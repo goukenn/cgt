@@ -1,0 +1,182 @@
+<?php
+//NAME: IGK CGT - mini framework
+//AUTHOR : C.A.D. BONDJE DOUE
+//DESC: mini igk framework for cgt-plugins management
+//
+
+
+include(IGK_CGT_INSTALLDIR."/.igkwp-actions.pinc");
+
+
+if (!defined("IGK_FRAMEWORK"))
+{
+define("IGK_CGT_INWP_ALONE", 1);
+// define("IGK_FRAMEWORK", 1);
+require_once(dirname(__FILE__)."/Lib/igk/igk_framework.php");
+define("IGK_APP_DIR", igk_io_dir(ABSPATH));
+define("IGK_SVG_REGNODE_KEY", "sys://cgt/reg_keynode");
+
+//load lib 
+igk_loadlib(IGK_LIB_DIR."/Ext");
+
+}
+
+
+//create plugin
+function igk_wp_create_plugin($name, $version=1.0, $title=null, $desc=null, $pluguri=null, $author=null,$authname=null){
+	igk_die(__FUNCTION__." not implement");
+	// return array(
+		// "Name" => $name,
+		// "PluginURI" => $pluguri,
+		// "Version" => $version,
+		// "Description" => $desc,
+		// "Author" => $author?? "C.A.D BONDJE DOUE",
+		// "AuthorURI" => "",
+		// "TextDomain" => "",
+		// "DomainPath" => "",
+		// "Network" => "",
+		// "Title" => $title ?? $name,
+		// "AuthorName" => $authname ?? "C.A.D BONDJE DOUE"
+	// );	
+}
+
+function igk_wp_geturi($n){
+	global $igk_ctrl;
+	if ($igk_ctrl)
+		return $igk_ctrl->getAppUri($n);	
+	return igk_io_baseUri();
+}
+function igk_wp_enqueue_script($scripts=null){
+	//enqueue balafons scripts at the end of the script
+	wp_enqueue_script("balafonjs", igk_io_baseUri()."/Lib/igk/scripts/igk.js?l=1");
+	if ($scripts){
+		foreach($scripts as $k=>$v){
+			wp_enqueue_script($k, $v);
+		}
+	}	
+}
+function igk_wp_enqueue_css(){
+	//igk_ilog("enquee css ".current_action());
+	wp_enqueue_style("balafoncss", igk_io_baseUri()."/R/Styles/balafon.css.php");
+}
+
+// add_action(IGKWP_ACTIONS::ENQUEUE_SCRIPTS, function(){
+	
+// });
+// add_action(IGKWP_ACTIONS::WP_HEAD, function(){
+	// $t = igk_createNode("title");
+	// $t->Content = "Title is ";
+	// $t->RenderAJX();
+// });
+
+function igk_wp_generate_ref($dir){
+	$ext = "\.php";
+	$out = array();
+	if (is_dir($dir)){
+		$tab = array();
+		array_push($tab, $dir);
+		$s = "";
+		while($dir = array_pop($tab)){		
+			$hdir = opendir($dir) ?? die("failed to opend dir");		
+			while($s = readdir($hdir)){			
+			if (($s==".") || ($s==".."))
+				continue;
+			$f = $dir."/".$s;
+			if (is_dir($f))
+				array_push($tab, $f);
+			else 
+			{
+				if (preg_match("/".$ext."$/i", $s)){					
+					$out[realpath($f)]=array();
+				}
+			}
+			}
+
+			closedir($hdir);			
+		}
+	
+	}
+	return $out;
+
+}
+
+function igk_wp_registerLib($dir=null, $ext=".phlib", $callback=null, $ns=null){
+	
+	$dir = $dir ?? dirname(__FILE__);
+	if (!is_dir($dir))
+		return;
+	$tab = array();
+	array_push($tab, $dir);
+	$src = realpath($dir);
+	$ln = strlen($src);
+	ob_start();
+	$s = "";
+	
+	$functions = get_defined_functions()["user"];
+	$classes = get_declared_classes();
+	$source = igk_count($functions);
+	$clcount = igk_count($classes);
+	
+	
+	// igk_exit();
+	while($dir = array_pop($tab)){		
+		$hdir = opendir($dir) ?? die("failed to pend dir");		
+		while($s = readdir($hdir)){			
+		if (($s==".") || ($s==".."))
+			continue;
+		$f = realpath($dir."/".$s);
+		if (is_dir($f))
+			array_push($tab, $f);
+		else 
+		{
+			if (preg_match("/".$ext."$/i", $s)){
+				if ($ns){
+					$subdir = str_replace("/","\\",substr(dirname($f), $ln+1));					
+					$script = igk_io_read_allfile($f);
+					$nspace = $ns.( !empty($subdir)? "\\".$subdir : "");
+					$g ='namespace '.$nspace.'; use '.$ns.' as __base_ns; $Gfile = \''.$f.'\'; ?>'.$script;
+					
+					//igk_ilog($g);
+					try{	
+						igk_set_env(IGK_LAST_EVAL_KEY, "/!\\ eval file: ". $f);
+						eval($g);					
+						igk_set_env(IGK_LAST_EVAL_KEY,null);
+					}catch(Exception $e){
+						continue;
+					}
+					
+					$functions2 = get_defined_functions();
+					$classes2 = get_declared_classes();
+					
+					if (count($functions2["user"])> $source){			
+						$ktab = array_slice($functions2["user"], $source);			
+						igk_reg_func_files($f, $ktab);			
+						$source+=igk_count($ktab);
+					}		
+					if (count($classes2)> $clcount){			
+						$ktab = array_slice($classes2, $clcount);						
+						igk_reg_class_file($f, $ktab);			
+						$clcount+=igk_count($ktab);
+					}
+					
+					
+				}else
+					include_once($f);
+				$h = ob_get_contents();
+				igk_assert_die( ($ct = strlen($h)) > 0, "file : ".$f. " : content : ".$ct . " ".$h); 
+				if ($callback){
+					$callback($f, $src, $ns);
+				}
+			}
+		}
+		}		
+		closedir($hdir);
+	}	
+	ob_end_clean();
+}
+
+if (!defined("IGK_APP_DIR"))
+	define("IGK_APP_DIR", dirname(igk_getv($_SERVER, "SCRIPT_FILENAME")));
+define("IGK_FRAMEWORK_ATOMIC", 1);
+IGKApp::Init(null);
+?>

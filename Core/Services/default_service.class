@@ -1,0 +1,37 @@
+<?php
+
+///<summary>represent the default surface</summary>
+class default_service{
+	public function sendQuery($cmd){
+		$uri = igk_cgt_get_base_uri();
+		$query=(object)array(
+		"uri"=>$uri."/all",
+		//"uri"=>$uri."/thesaurus/typeofr/1",
+		//"uri"=>$uri."/thesaurus/tins/20",
+		"ws_key"=>igk_cgt_conf_get("general/key")
+		);		
+		$o= igk_cgt_send_request($query);
+
+		igk_wln($query->uri);
+
+		$s = igk_conf_load_content($o, "thesaurus");
+		
+		
+		
+		// $s = igk_conf_load_content($o, "thesaurus");
+		// //igk_wln(igk_conf_get($s, "tins/commune"));
+		
+		// $dv = igk_createNode("div");
+		// $dv->addSectionTitle(6)->Content = igk_conf_get($s, "tins/commune/0/value");
+		// $inf = $dv->addDiv();
+		// $inf->addDiv()->Content = igk_conf_get($s, "tins/longitude");
+		// $inf->addDiv()->Content = igk_conf_get($s, "tins/latitude");
+		// $inf->addDiv()->Content = igk_conf_get($s, "tins/mdt/value");
+		// $inf->addDiv()->Content = igk_conf_get($s, "tins/cp");
+		// $inf->addDiv()->Content = igk_conf_get($s, "tins/pays");
+		// $dv->RenderAJX();
+
+		return $o;
+	}
+}
+?>

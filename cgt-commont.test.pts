@@ -1,0 +1,11 @@
+<?php
+//cgt-common testing
+
+
+function igk_utest_cgt_display_filter(){
+	
+	
+}
+igk_wln("common testing ");
+igk_exit();
+?>

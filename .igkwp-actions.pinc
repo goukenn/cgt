@@ -1,0 +1,39 @@
+<?php
+//inc shared actions
+
+// final class IGKWP_ACTIONS{
+	// const ADMIN_MENU="admin_menu";    // call when admin request menu creation
+	// const ADMIN_INIT = "admin_init";  // call when admin initialize
+	// const ADMIN_HEAD = "admin_head";  // call when admin head request
+	// const WIDGETS_INIT = "widgets_init";
+	// const ENQUEUE_SCRIPTS = "wp_enqueue_scripts";
+	// const WP_HEAD = "wp_head";
+	// const WP_INIT = "init";
+// }
+
+
+
+final class IGKWP_ACTIONS{
+	const ADMIN_MENU="admin_menu";    // call when admin request menu creation
+	const ADMIN_INIT = "admin_init";  // call when admin initialize
+	const ADMIN_HEAD = "admin_head";  // call when admin initialize
+	const ADMIN_FOOTER ="admin_footer"; //call to render after body page
+	
+	const WIDGETS_INIT = "widgets_init";
+	const ENQUEUE_SCRIPTS = "wp_enqueue_scripts";
+	const WP_HEAD = "wp_head";
+	const WP_INIT = "init";
+	
+}
+
+final class IGKWP_FILTERS{
+	const NAV_MENU_ITEM="wp_nav_menu_items";    // filters menu items
+	const NAV_PRE_MENU = "pre_wp_nav_menu"; //change filtering return string for the new menu
+}
+
+final class IGKWP_CAPABILITY{
+	const MANAGE_OPTIONS = "manage_options";
+}
+
+
+?>

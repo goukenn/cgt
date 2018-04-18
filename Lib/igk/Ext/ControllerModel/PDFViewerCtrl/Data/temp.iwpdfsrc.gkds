@@ -1,0 +1,15 @@
+<!--This is a gkds DrSStudio file 9.3.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <TargetSurface>2DDrawingSurface</TargetSurface>
+  </Project>
+  <Documents>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" Id="LayerDocument_60040190">
+      <Layer GammaCorrection="0" Id="Layer_33087650">
+        <Rectangle Bounds="65.00632;70.63104;153.0503;76.36896" FillBrush="Type:Solid;Colors:#FFFFF600;" StrokeBrush="Type:Solid;Colors:#FF0023FF;" Matrix="0.6476485,-0.7619393,0,0,0.7619393,0.6476485,0,0,0,0,1,0,-32.60788,145.4874,0,1" Id="Rectangle_23622286" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

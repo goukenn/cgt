@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<componentnodecallback>
+	<attr name="listener" required="1" fr="Listener implémentant IIGKParamHostService" ></attr>
+	<attr name="name" required="1" fr="Nom utilisé lors de l'enregistrement du composant"></attr>
+	<attr name="callback" required="1" fr="Fonction de rappel à utiliser pour créer le composant"></attr>
+</componentnodecallback>

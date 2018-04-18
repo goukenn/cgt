@@ -1,0 +1,273 @@
+<?php
+///<summary>represent the search widget</summary>
+class IGK_CGT_SearchZone extends WP_Widget{
+	public function __construct(){
+		parent::__construct(
+			igk_cgt_widget_name(__CLASS__),
+			"CGT - Search and Filter",
+			array("description"=>_("CGT PIVOT search and filter widget")
+			)			
+		);
+	}
+	
+	public function widget($args, $instance){		
+		
+		$gp = igk_cgt_get_groupname();
+		$s = igk_cgt_filter_data($gp);
+		if ($s==null)
+			return;
+		$d = igk_createNode("div");	
+		
+	
+		
+		
+		$selfilter = igk_getr("filter");
+				// igk_wln($selfilter);
+				// igk_exit();
+		if($selfilter ){
+			$gfilter = array();
+			foreach($selfilter as $k=>$v){
+				switch($k)
+				{
+					case IGK_CGT_MCHOICE:
+						//get last mchoice fields
+						$stab  =array();
+						$qtab = array($v);
+						while($q = array_pop($qtab)){
+							
+							if (is_array($q)){
+								// igk_wln($q);
+								foreach($q as $ok=>$ov){
+									array_push($qtab, $ov);
+								}
+							}else{
+								$stab[] =  $q;
+							}
+						}						
+						$gfilter["\0m"]= array_combine($stab, $stab);
+					break;
+					default:
+						$gfilter = array_merge($gfilter, array_combine($v,$v));
+					break;
+				}
+			}
+			
+			//igk_wln($gfilter);
+			$selfilter = $gfilter;
+			//exit;
+		}else{
+				$c = igk_cgt_get_cookie("filter-".$gp);
+				if ($c && $f = igk_getv($c,'f')){
+					//update from filter
+					// igk_wln($c);
+					$f = $c->f;
+					$selfilter =array();
+					foreach($f as $k=>$v){
+						$selfilter= array_merge($selfilter, array_combine($v, $v));
+						$selfilter["\0m"] = $v;
+					}					
+					
+					// $_REQUEST["filter"] = $selfilter;
+					igk_cgt_set_env("cgt://filterpagequery", (array)$f);
+					// igk_wln($c);
+					// igk_exit();
+				}
+		// igk_wln($c);
+		// igk_wln($selfilter);
+		// igk_exit();
+			
+			
+		}
+		// $d->addNoTagObData(function(){
+		// igk_wcode($_REQUEST);			
+		// exit;
+		// });
+		
+		//mark the vv
+		
+
+		$frm  = $d->addForm();
+		
+		$box = $frm->addPanelBox();
+		
+		igk_html_title($box->addDiv(), $gp);
+		
+		
+		$frm["action"]=igk_cgt_base_uri()."/{$gp}?cgt-actions=filter&gp={$gp}";
+		$frm["class"]="search-z fitw";		
+		$imgsrv = igk_cgt_get_service("img");
+		
+		
+		//display
+		$display = array(); //store display groups
+		
+		$dv = $box->addDiv();
+		
+		// igk_wln($selfilter);
+		// exit;
+		$uls = array();
+		
+		foreach($s as $k=>$v){			
+			foreach($v as $type=>$list){			
+				foreach($list as $m=>$n){
+				$tab = explode("|", $n);
+				
+				$v_name = igk_cgt_get_urn_display($k, $m) ?? igk_die("display name is null for : ".$m);
+				if (empty($v_name))
+					igk_die("is empty");
+				$ul = igk_getv($display, $v_name);
+				if ($ul==null){				
+					$ul= $dv->add("ul");				
+					$ul->add("li")->Content = $v_name;
+					$display[$v_name]= $ul;
+					$uls[] = $ul;
+				}
+				foreach($tab as $v_k=>$v_v){
+					
+					if (!isset($ul->glabel))
+						$ul->glabel = array();
+					
+					if (isset($ul->glabel[$v_v]))
+						continue;
+					$ul->glabel[$v_v] = 1;
+					
+					$li = $ul->add("li")
+					->setClass("no-wrap");
+					$ip = null;
+					$title = igk_cgt_get_urn_display($k, $v_v);
+					$li->ttag = $title;
+					
+						// igk_wln("check ".$type);		
+					switch($type){
+						case "multichoice":
+						$ip = $li->add("input")->setAttributes(
+							array(
+								"type"=>"checkbox",
+								"name"=>"filter[".IGK_CGT_MCHOICE."][".$m."][]",
+								"value"=>$v_v
+								)
+							);
+							
+							if ($selfilter){
+								if (isset($selfilter["\0m"][$v_v])){
+									$ip["checked"] = true;
+								}
+							}
+						break;
+							default:
+							$ip = $li->add("input")->setAttributes(
+							array(
+								"type"=>"checkbox",
+								"name"=>"filter[".$m."][]",
+								"value"=>$v_v
+							)
+							);
+							if ($selfilter){
+								// igk_wln("chck for ".$v_v);
+								if (isset($selfilter[$v_v])){
+									$ip["checked"] = true;
+								}
+							}
+					
+					
+					break;
+					}
+					
+					
+					
+					$li->add('span')
+					->setClass("no-wrap")
+					->Content = $title;
+					$size = igk_cgt_get_picto_size($v_v);
+					$li->addImg()
+					->setAttribute("alt", $v_v)
+					->setSrc($imgsrv->getPictoUri($v_v, 0,$size->y));
+				}
+			
+			
+			
+			}
+		
+		
+			}
+		}
+		
+		
+		
+		//sort uls
+		foreach($uls as $ul){
+							
+			IGKHtmlItem::SortChildCallback($ul, function($i,$s){
+							$x = igk_getv($i, "ttag");
+							$y = igk_getv($s, "ttag");
+							
+							// igk_wln("tag:x : ".$x);
+							// igk_wln("tag:y : ".$y);
+							return strcmp($x, $y);;
+						});
+						//break;
+					
+		}
+		// $dv = $box->addDiv();
+		// foreach($s as $k=>$v){
+			
+			// foreach($v as $m=>$n){
+				// $tab = explode("|", $n);
+				// $ul= $dv->add("ul");
+				
+				// $ul->add("li")->Content = igk_cgt_get_urn_display($k, $m);
+				// foreach($tab as $v_k=>$v_v){
+					// $li = $ul->add("li")
+					// ->setClass("no-wrap");
+					// $ip = $li->add("input")->setAttributes(
+					// array(
+						// "type"=>"checkbox",
+						// "name"=>"filter[".$m."][]",
+						// "value"=>$v_v
+					// )
+					// );
+					
+					// if ($selfilter){
+						// if (isset($selfilter[$v_v])){
+							// $ip["checked"] = true;
+						// }
+					// }
+					
+					// $li->add('span')
+					// ->setClass("no-wrap")
+					// ->Content =  igk_cgt_get_urn_display($k, $v_v);
+					// $size = igk_cgt_get_picto_size($v_v);
+					// $li->addImg()
+					// ->setAttribute("alt", $v_v)
+					// ->setSrc($imgsrv->getPictoUri($v_v, $size->x,$size->y));
+				// }
+			// }
+		// }
+		
+		$a = $frm->addDiv();
+		$a->addDiv()->addInput("btn.filter", "submit", __("Filter"));
+		$d->RenderAJX();
+		// igk_exit();
+	}
+
+	public function form($instance){
+		$d = igk_createNode("div");
+		$pid = $this->get_field_id("page");
+		$pn = $this->get_field_name("page"); //important to store data
+		
+		$page = isset($instance["page"])? $instance["page"] : "";
+		// $ul = $d->addUl();		
+		// $ul->add("li")->addXmlNode("input")->setAttributes(
+			// array(
+			// "name"=>$pn,
+			// "id"=>$pid,
+			// "type"=>"text",
+			// "value"=>$page			
+			// )
+		// );		
+		$d->RenderAJX();
+	}
+}
+
+igk_cgt_register_widget("IGK_CGT_SearchZone");
+?>

@@ -1,0 +1,29 @@
+<?php
+//
+//query tab options
+//
+class cgt_query_tabview extends __base_ns\AdminService{
+	const SERVICE_NAME ="query";
+	public function getName(){
+		return self::SERVICE_NAME;
+	}
+
+	public function update(){
+		igk_wln($_REQUEST);
+		
+		$c = igk_getr("choice");
+		$obj = igk_createObj();
+		if ($c){
+				$obj->urns = $c;
+		}
+		igk_wln((array)$obj);
+		exit;
+	}
+	public function configure($t){			
+		$srv = igk_cgt_get_service("thesaurus", 1);	
+	}
+}
+//
+// igk_cgt_reg_setting_service(cgt_query_tabview::SERVICE_NAME, new cgt_query_tabview());
+//
+?>

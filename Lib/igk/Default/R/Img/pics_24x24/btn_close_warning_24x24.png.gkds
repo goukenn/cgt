@@ -1,0 +1,23 @@
+<!--This is a gkds DrSStudio file 9.3.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <TargetSurface>2DDrawingSurface</TargetSurface>
+  </Project>
+  <Documents>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="24" Height="24" Id="LayerDocument_61438591">
+      <Layer GammaCorrection="0" Id="Layer_34308057">
+        <DocumentBlock Matrix="0.75,0,0,0,0,0.75,0,0,0,0,1,0,0,0,0,1" Id="DocumentBlock_27647293">
+          <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" InterpolationMode="Hight" PixelOffset="Default" Width="32" Height="32" Id="LayerDocument_15580212">
+            <Layer GammaCorrection="0" Id="Layer_33361745">
+              <Rectangle Bounds="0;0;32;32" FillBrush="Type:Solid;Colors:#FF00B3FF;" StrokeBrush="Type:Solid;Colors:#FFFF;Alignment:Inset;DashStyle:Solid;LineJoin:Round" Id="Rectangle_21473145" />
+              <Line StrokeBrush="Type:Solid;Colors:#FFFF;Alignment:Inset;Width:8;DashStyle:Solid;LineJoin:Round" EndPoint="26;26" StartPoint="5;5" Id="Line_19948030" />
+              <Line StrokeBrush="Type:Solid;Colors:#FFFF;Alignment:Inset;Width:8;DashStyle:Solid;LineJoin:Round" EndPoint="26;26" StartPoint="5;5" Matrix="-4.371139E-08,1,0,0,-1,-4.371139E-08,0,0,0,0,1,0,30,9.536743E-07,0,1" Id="Line_19948030" />
+            </Layer>
+          </LayerDocument>
+        </DocumentBlock>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

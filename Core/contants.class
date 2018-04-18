@@ -1,0 +1,15 @@
+<?php
+
+final class constants {
+	const DEFAULTXSD = "http://pivot.tourismewallonie.be/files/xsd/pivot/3.1";
+	const DEFAULTINSTANCE="http://www.w3.org/2001/XMLSchema-instance";
+	const SCHEMA_LOCATION = "http://pivot.tourismewallonie.be/files/xsd/pivot/3.1 file:/D:/JAVAProjects/Wildfly/PivotWeb/src/main/resources/xsd/pivot310-import-query.xsd";
+	
+	const CriteriaGroup = "CriteriaGroup";
+	const CriteriaDefaultOperator="and";
+	const CriteriaField="CriteriaField";
+	const CriteriaQuery="CriteriaQuery";
+	const QueryTag="Query";
+	
+}
+?>

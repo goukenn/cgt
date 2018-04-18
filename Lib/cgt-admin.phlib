@@ -1,0 +1,985 @@
+<?php
+//----------------------------------------------------------------------------------
+//CGT - admin administration configuration
+//file: cgt-admin.phlib
+//author: C.A.D. BONDJE DOUE
+//version: 1.0
+//desc: administrative function and cgt actions
+//creation: 04/12/2017
+//contact: bondje.doue@igkdev.be
+//----------------------------------------------------------------------------------
+
+include_once(ABSPATH."/wp-admin/includes/template.php");
+
+
+
+
+
+///<summary>used to administrate the plugin</summary>
+class CGT_Admin{
+	static $sm_self;
+	private $m_not; //notification node
+	
+	const MENU_CONFIGPAGE = "cgt:/adminmenu/configs";
+	
+	public static function getInstance(){
+		return self::$sm_self;
+	}
+	public function __construct(){		
+		
+		add_action(IGKWP_ACTIONS::ADMIN_MENU, array($this, "adminActions"));
+		add_action(IGKWP_ACTIONS::ADMIN_INIT, array($this, "adminInit"));
+		add_action(IGKWP_ACTIONS::ADMIN_HEAD, array($this, "adminHead"));	
+		add_action(IGKWP_ACTIONS::ADMIN_FOOTER, array($this, "adminFooter"));
+		
+		
+		igk_cgt_reg_classes(dirname(__FILE__)."/../Core", IGK_CGT_NS);			
+		igk_cgt_reg_classes(dirname(__FILE__));		
+		add_action(IGKWP_ACTIONS::WP_INIT, array($this,"initPage"));
+		
+		self::$sm_self=$this;
+	}
+	private function getNotification(){
+		if ($this->m_not==null)
+			$this->m_not = igk_createNode("NoTagNode");
+		return $this->m_not;
+	}
+	
+	function registerNavMenu(){		
+		//register theme menu
+		//register_nav_menu('topbasemenu', "BaseMenu");		
+	}
+	
+	function getUri($a){
+		return igk_cgt_action_uri($a);
+	}
+	function getSettingUri($a){
+		$u = igk_io_request_uri();
+		$u.= "&action=".$a;
+		return $u;
+	}
+	
+	public function initPage(){
+		//igk_die("page action");
+		$action = igk_getr("cgt-actions");		
+		if (!empty($action)){	
+			$a = "action_".$action;
+			if (method_exists($this, $a)){
+				call_user_func_array(array($this, $a), array());
+			}else
+				igk_cgt_handle_action($action, $this);
+		}	
+		//$tab = igk_io_getfiles(IGK_CGT_INSTALLDIR, "/\.js$/");
+		// igk_wln($tab);
+		// igk_wln(igk_io_baseUri($tab[0]));
+		
+		// $sc = igk_createNode("script");
+		// $sc["src"]=$tab[0];
+		
+		// $sc->RenderAJX();
+		
+		// exit;
+		
+		$uri =  igk_cgt_plugin_uri();
+		if (defined("IGK_CGT_INWP_ALONE")){
+			
+			
+			$quri = $uri."/R/Scripts/balafon.js";			
+			// igk_wln($quri);
+			// exit;
+			wp_enqueue_script("balafon_js", $uri."/R/Scripts/balafon.js");
+			wp_enqueue_style("balafon_pcss",$uri."/R/Styles/balafon.css");
+		}else{
+			$tab = igk_io_getfiles(IGK_CGT_INSTALLDIR."/R/Scripts", "/\.js$/");
+			
+			igk_wp_enqueue_script();					
+			igk_wp_enqueue_css();
+		}
+		wp_enqueue_style("_cgt_css",$uri."/R/Styles/cgt.css");
+		wp_enqueue_script("_cgt", $uri."/R/Scripts/.cgt.script.js");	
+	}
+	public function getSettingGroup(){
+		return "cgt://adminsetting";
+	}
+	public function adminHead(){
+		//igk_die("head action");
+		// $c = igk_createNode("script");
+		// $c->Content = "ns_igk.init_document();";
+		// $c->RenderAJX();
+	}
+	public function adminFooter(){
+		
+		if ($this->m_not){
+			$this->m_not->RenderAJX();
+		}
+		
+		igk_js_init();
+	}
+	///<summary>initialize the administration setting</summary>
+	public function adminInit(){
+		//igk_die("admin init");		
+		// igk_wp_enqueue_script();
+		// igk_wp_enqueue_css();
+
+		
+		$action = igk_getr("admin-cgt-actions");
+		if ($action ){			
+			if (igk_cgt_handle_action($action, $this))
+			igk_exit();
+		}		
+	}
+	public function adminActions(){	
+
+		add_menu_page(
+			"CGT-Plugin PIVOT Management",
+			"CGT-PPM",
+			"manage_options",
+			self::MENU_CONFIGPAGE,
+			array($this, "form"),
+			igk_cgt_plugin_uri()."/R/svg/admin-logo.svg"
+			);	
+	}
+	///<summary>formr used to configure the plugin</summary>
+	public function form(){
+			$action = igk_getr("action");
+			$meth = "action_".$action;
+			if (method_exists($this, $meth)){
+				call_user_func_array(array($this, $meth), array());		
+			}
+			//current uri
+			$curi = "?page=".urlencode(self::MENU_CONFIGPAGE);
+		
+			$d = igk_createNode("div");
+			$d->setClass("igk-wp-admin");
+			$d->add("h2")->setClass("no-wrap ellipsis")->Content =  get_admin_page_title();
+			$frm = $d->addForm();
+			//$frm["action"] = "options.php";
+			$frm["action"] = $curi;
+			$frm["method"] = "post";
+			
+			$frm->addObData(function(){ settings_fields($this->getSettingGroup()); }, "NoTagNode");
+			$box = $frm->addDiv()->addPanelBox();
+			$box->add("h2")->Content = igk_cgt_lang("title.general");
+			$dt = $box->addDiv();
+			
+			$dt->addNotifyHost($this->getSettingGroup());
+			
+			igk_qr_save( igk_cgt_array_prepend_key("cgt_",
+			(array)igk_cgt_get_conf("general",  
+				array(
+			"baseuri"=>igk_cgt_get_base_uri(),
+			"key"=>"aa0f76f6-1994-49a0-9802-40109a5eb9b4",
+			"autocache_request"=>0,
+			"autocache_time"=>34000
+			))));
+			
+			
+			$row = $dt->addRow();
+			
+			//general cell
+			$ul = $row->addCol("igk-col-4-2 igk-sm-fitw igk-xsm-fitw")->addDiv()->add('ul');
+			igk_html_buildform($ul, array(
+			"cgt_baseuri"=>array("require"=>1, "title"=>"Base Uri"),
+			"cgt_key"=>array("require"=>1, "title"=>"WS KEY"),
+			"cgt_autocache_request"=>array("require"=>1, "title"=>"Auto Cache", "type"=>"checkbox", "help"=>igk_cgt_lang("cgt.tip.autocache_request"), "attribs"=>array("value"=>"1")),
+			"cgt_autocache_time"=>array("title"=>"Auto cache timeout"),
+			));
+			$frm->addInput("action", "hidden", "update_general");
+			$frm->addDiv()->addObData("submit_button"); 
+			
+			//tip info
+			$pan = $row->addCol("igk-col-4-2")->addDiv();
+			$pan->addDiv()->setStyle("font-style:italic")->Content = "Zone de configuration du plugin CGT. ";
+			
+			
+			
+			
+			$dv = $d->addDiv();
+			$pan = $dv->addPanelBox();			
+			//init global service
+			$lst = array(
+			"global"=>array()
+			);
+			
+			///get all configuration table 
+			$srv = igk_get_setting_services();
+			$lst = array_merge($lst, $srv);
+			
+			
+			$tab = $pan->addAJXTabControl();
+			$selected =   igk_getv(igk_cgt_get_settingcookie(),'tab') ?? 'global';
+			
+		
+			$buri = igk_getv(explode("?", igk_io_request_uri()), 0);
+			foreach($lst as $k=>$v){
+				$tab->addTabPage(igk_cgt_lang($k), $buri."?cgt-actions=tabview&n=".$k, $k==$selected);
+			}		
+			
+			
+			
+			$uri = igk_cgt_get_env("cgt://replace_uri");			
+			if (!empty($uri)){
+				$d->addScript()->Content = "igk.winui.history.replace('{$uri}');";
+			}
+			
+			$d->RenderAJX();
+			$tab->Dispose();			
+	}
+
+	
+	///<summary>update sys action</summary>
+	private function action_update_general(){		
+		$o = igk_get_robj("^cgt_",1);
+		//callupdate but no 
+		$o->author = "C.A.D. BONDJE DOUE";
+		$o->date = date("Y-m-d H:i:s");		
+		$cnf = igk_cgt_configs();
+		$cnf->{"general"} = $o;
+		
+		igk_cgt_store_configs($cnf);
+		igk_notifyctrl($this->getSettingGroup())->addSuccess("setting updated");
+	}
+	
+	
+	//-------------------------------------------------------------------------------------------
+	//Public administration ACTIONS
+	//-------------------------------------------------------------------------------------------
+	
+	public function action_update_service(){
+		// igk_wln("update service");
+		$referer = igk_getv($_SERVER, "HTTP_REFERER");
+		// igk_wln("update service ".$referer);
+		// igk_wln($_REQUEST);
+		$n =igk_get_setting_service( igk_getr("service"));
+		
+		if ($n && $n->update($this)){
+			igk_notifyctrl()->addSuccess("setting updated");			
+		}		
+		$r = $referer ?? igk_io_baseUri();		
+		igk_navto($r);
+		igk_exit();
+	}
+	public function action_xsl(){
+		//igk_ilog("call xsl");
+		$t = igk_getr("t");
+		$x = igk_cgt_createxsl_filters("clFilters");
+		header("Content-Type: text/xsl");
+		$x->RenderAJX();
+		igk_exit();
+	}
+	
+	///<summary>call to view a tab view </summary>
+	public function action_tabview(){
+		$n = igk_getr("n");
+		$t = igk_createNode("div");
+		$ref_uri = igk_is_ajx_demand() ? 
+			"?".htmlentities(igk_getv(explode("?", igk_sys_srv_referer()),1)):
+			igk_io_request_uri();
+		
+		// igk_ilog("ref uri ");
+		// igk_wln( "???". igk_is_ajx_demand());
+		// igk_wln($ref_uri);
+		// exit;
+		
+		//store cookie
+		$cookie = igk_cgt_get_settingcookie() ?? (object)array();
+		$cookie->tab = $n;
+		igk_set_cookie("cgt-setting", igk_json_encode($cookie), 1);
+		switch(strtolower($n)){
+			case "global":
+				$g = igk_cgt_get_group();
+				if (igk_count($g) == 0){			
+					$t->addDiv()->Content = igk_cgt_lang('No groups found');			
+				}else{
+					$dv = $t->addDiv();
+					$dv->setClass("overflow-x-a");					
+					$table = $dv->addTable();
+					$table->setClass("igk-table-striped")
+					->setStyle("line-height:1.1rem; min-width:100%");
+					
+					$tr = $table->addTr()->setClass("alignl");
+					$tr->addTh()->setStyle("width:32px")->Content = IGK_HTML_SPACE;
+					$tr->addTh()->Content= _cgt("Name");
+					$tr->addTh()->Content= _cgt("CriteriaKey");
+					$tr->addTh()->Content= _cgt("Offers");
+					$tr->addTh()->Content= _cgt("Filters");
+					$tr->addTh()->setStyle("width:32px")->Content= IGK_HTML_SPACE;
+					// $tr->addTh()->setStyle("width:32px")->Content= IGK_HTML_SPACE;
+					//$tr->addTh()->setStyle("width:32px")->Content= IGK_HTML_SPACE;
+					foreach($g as $k=>$v){
+						
+						$key = igk_getv($v, "key");
+						if (empty($key))
+							$key = null;
+						
+						$tr = $table->addTr();
+						$tr->addTd()->addInput("sl", "checkbox");
+						$tr->addTd()->addA(igk_cgt_base_uri()."/".$v->name)->Content = $v->name;
+						$tr->addTd()->addTextEdit($v->name."[key]", "?cgt-actions=addkey&n=".$v->name)->Content = $key ?? "Not defined"; 
+						$tr->addTd()->Content = igk_cgt_get_offers_display($v) ?? __("No Offer");
+			
+						$tr->addTd()->Content =  
+						igk_createNode("ajxa",null, array("?cgt-actions=editfilter&t={$v->name}&n=1"))->setContent(
+						igk_cgt_get_offers_filter_display($v) ?? __("No filter"))->Render();
+						
+						//$tr->addTd()->addABtn("#")->setClass("igk-svg-btn")->Content = igk_svg_use("edit");
+						//$tr->addTd()->addABtn("?cgt-actions=downloadquery&n=".$v->name)->setClass("igk-svg-btn")->Content = igk_svg_use("download");
+						// $tr->addTd()->addABtn($this->getUri("drop_group&n=".$v->name))->setClass("igk-svg-btn")->Content = igk_svg_use("drop");
+						$tr->addTd()->addABtn($ref_uri."&action=drop_group&n=".htmlentities($v->name))->setClass("igk-svg-btn")->Content = igk_svg_use("drop");
+						
+					}
+					
+				}
+				
+				//-----------------------------------------------------------------------------------------
+				// $xml = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS,1)->getUrnFilterList(262);
+				// $t->addDiv()->Content = igk_cgt_get_last_query();
+				// $x = igk_cgt_createxsl_filters("clFilters");
+				// $t->addDiv()->addxslt($xml, $x->Render(), 1);
+				//-----------------------------------------------------------------------------------------
+				
+				$ab = $t->addActionBar();				
+				$ab->addAJXA("?cgt-actions=addgroup")
+				->setClass("igk-btn igk-svg-btn no-margin no-padding")
+				->setStyle("display:inline-block; width:24px; height:24px;")->Content = igk_svg_use("add");
+				
+				$ab->addA($ref_uri."&cgt-actions=clearcache")
+				->setClass("igk-btn igk-svg-btn no-margin no-padding")
+				->Content = "Clear Cache";
+				
+				break;
+			default:		
+				$g = igk_cgt_get_setting_view($n , $t);				
+			break;
+		}		
+		$t->RenderAJX();
+		igk_exit();
+	}
+	public function action_addkey(){
+		$n = igk_getr("n");
+		$k = igk_getv(igk_getr($n), "key");		
+		$g = igk_getv(igk_cgt_get_group(), $n);
+		if ($g){
+			$g->key = empty($k)?null:$k;
+			//store groups			
+			igk_cgt_store_configs();
+			igk_ajx_toast("Query key updated", "igk-success");
+		}else{
+			igk_ajx_toast("failed to update key", "igk-danger");
+		}
+		igk_exit();
+	}
+	
+	public function action_clearcache(){
+		IGKIO::RmDir(IGK_CGT_CACHEDIR);
+		//igk_navto(igk_getv($_SERVER, "HTTP_REFERER"));
+
+		$this->getNotification()->addObData(function(){
+			igk_ajx_toast(R::gets("Cache cleared"), "igk-success");
+		});
+		$this->_replaceUri();
+		//igk_exit();		
+	}
+	private function _replaceUri(){
+		igk_cgt_set_env("cgt://replace_uri", "?page=".urlencode(self::MENU_CONFIGPAGE));
+	}
+	
+	
+	
+	//-----------------------------------------------------------------------------------------
+	//filter action
+	//-----------------------------------------------------------------------------------------
+	
+	///<summary>get filter ajx form</summary>
+	public function action_getfilter_form($id=null, $groupname=null, $auto=1, $form=1){		
+		$n = $id ?? igk_getr('n');
+		$groupname = $groupname ?? igk_getr("t") ?? "default".$n;
+		$thesrv = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS, 1);
+		$xml = $thesrv->getUrnFilterList($n);
+		
+		// igk_xml($xml);
+		// igk_exit();
+		$pos = strpos($xml, "?>");
+
+
+		
+
+		
+		$dom = new DOMDocument();
+		$dom->loadXML($xml);
+		
+		$xslx  = igk_cgt_createxsl_filters($n, $groupname)->Render();
+		
+		// igk_text($xslx);
+		// igk_exit();
+		
+		
+		$xsl = new \DOMDocument();
+		$xsl->loadXML($xslx);
+		
+		$proc = new \XSLTProcessor();
+		libxml_use_internal_errors(true);
+		if (!$proc->importStyleSheet($xsl)){
+			igk_text("failed to load : \n");
+			foreach (libxml_get_errors() as $error) {
+				echo "Libxml error: {$error->message}\n";
+			}
+			// igk_exit();
+		}
+		libxml_use_internal_errors(false);
+		$frm =null;
+		$isform = $auto && igk_getr("form",1);
+		if ($isform){
+			$frm = igk_createNode("form");
+			$frm["action"]=igk_cgt_base_uri()."?cgt-actions=store_filter";
+		}
+		else {
+			$frm = igk_createNode("NoTagNode");
+		}
+	
+		
+		$frm->addPanelBox()->setStyle("max-height:260px; overflow:auto")->addObData(function()use($proc, $dom){
+			// igk_wln("transform ");
+			igk_text($proc->transformToXML($dom));
+			// igk_exit();
+		});
+		
+		if ($isform){
+			$dv = $frm->addDiv();
+			$dv->addObData("submit_button");
+			$dv->addInput("cgt-e-filter", "hidden", 1);//edit filter		
+			$dv->addInput("cgt-offer-group", "hidden", $groupname);//edit filter	
+		}
+		
+		
+		$frm->RenderAJX();	
+		if ($auto && igk_is_ajx_demand()){
+			igk_exit();
+		}
+	}
+	
+	
+	public function action_test_store(){
+		igk_wln($_REQUEST);
+		igk_exit();
+	}
+	public function action_editfilter(){
+		$n = igk_getr("t");
+		$c = igk_getv(igk_cgt_get_group(), $n);
+
+		if ($c && isset($c->offers)){
+			
+			$g = explode("," , $c->offers);
+			$d = igk_createNode("div");
+			// $d->addObData($c);
+			// $d->addDiv()->Content = igk_cgt_js_filter_data($c->name);
+			//$d->setClass("overflow-x-a")->setStyle("max-height:360px");
+			
+			$isform = igk_count($g)>1;
+			$frm = null;
+			
+			$frm = $d->addForm();
+			$frm["action"] = igk_cgt_base_uri()."/?cgt-actions=store_filter";
+			$frm["method"]="POST";
+			// $frm["action"] = igk_cgt_base_uri()."?cgt-actions=action_test_store";
+			
+			$box = $frm->addDiv();
+			$box->setStyle("max-height:100%; overflow-y:hidden");
+			foreach($g as $k){	
+				$dv = $box->addDiv();
+				$dv["class"]="igk-col-3-3 igk-col-xlg-12-6 igk-col-xxlg-12-3";
+				
+				$dv->addDiv()->add('h2')->Content = igk_cgt_get_offer_name($k);
+				
+				$dv->addDiv()->addObData(function()use($k,$n){					
+					$this->action_getfilter_form($k, $n, false);
+				});
+			}
+		
+			$dv = $frm->addDiv();
+			$dv->addObData("submit_button");
+			$dv->addInput("cgt-e-filter", "hidden", 1);//edit filter		
+			$dv->addInput("cgt-offer-group", "hidden", $n);//edit group
+			// $frm->addInput("cgt_dat", "text", "info");//edit group
+			
+			// $dv->addInput("btn.submit", "submit", "submit");
+			
+			igk_ajx_notify_dialog(_("Edit - Filters"), $d , "default anim-fadein" );
+		}else{
+			igk_ajx_toast("No group to edit");
+		}
+		igk_exit();
+	}
+	
+	public function action_store_filter(){	
+		
+		$ajx = igk_is_ajx_demand();
+		$cnf = igk_cgt_configs();
+		$o = null;
+		$gf = igk_getv($cnf, "filters");
+		
+		igk_notifyctrl($this->getSettingGroup())->addSuccess("Filter updated");
+		// igk_notifyctrl($this->getSettingGroup())->addSuccess("setting updated");
+		
+		
+		
+		$data = igk_getr("data");
+		$group = igk_getr("cgt-offer-group");	
+
+		
+		if (($data==null) || ($group==null))
+			igk_cgt_die("requirement data not found");
+		
+		
+		$tt = null;
+		foreach($data as $id=>$tabv){
+			// igk_wln("for ".$id);
+			if ($o==null)
+				$o = (object)array();
+			else{
+				if ($tt==null)
+					$tt = array($o);
+				$o = (object)array();
+				$tt[] = $o;				
+			}
+			$o->{"@group"}= $group;
+			$o->{"@offer"}= $id;
+			foreach($tabv as $k=>$v){
+				switch($k){
+					case "choice":
+					foreach($v as $s=>$m){
+						if (!isset($o->{"choice"}->{"item"}))
+						{
+							$o->{"choice"}->{"item"} = (object)array("@urn"=>$s, "@value"=>implode("|", $m));		
+						}
+						else{
+							$b = $o->{"choice"}->{"item"};	
+							if (!is_array($b))
+								$b =array($b);
+							$b[] = (object)array("@urn"=>$s, "@value"=>implode("|", $m));		
+							$o->{"choice"}->{"item"} = $b;
+						}
+						
+					}
+					break;
+					case "multichoice":
+					foreach($v as $s=>$m){
+						if (!isset($o->{"multichoice"}->{"item"}))
+						{
+							$o->{"multichoice"}->{"item"} = (object)array("@urn"=>$s, "@value"=>implode("|", $m));		
+						}
+						else{
+							$b = $o->{"multichoice"}->{"item"};	
+							if (!is_array($b))
+								$b =array($b);
+							$b[] = (object)array("@urn"=>$s, "@value"=>implode("|", $m));		
+							$o->{"multichoice"}->{"item"} = $b;
+						}
+						
+					}
+					break;
+				}
+			}
+		}
+	
+			
+		// // igk_conf_unset($gf, "[group=hebergement]/[offer=3]");
+		// // igk_conf_unset($gf, "[group=hebergement]/[offer=3]/choice/item/[urn=urn:fld:qw]");//not drop
+
+		igk_wln($tt);
+
+		
+		
+		if ($gf && ($tt==null) && $o){
+			
+			$c = igk_conf_get($gf, "[group=".$o->{'@group'}."]",null, 1);
+			if ($c==null) {//no group found
+			// igk_wln($gf);
+			//igk_wln("no group ".$o->{'@group'});
+			// igk_wln($o);
+			// igk_exit();
+				if (!is_array($gf)){
+					$gf = array($gf);
+				}
+				$gf[] = $o;
+				$cnf->{"filters"} = $gf;
+				//igk_wln($gf);
+			}else{
+				//update group 
+				//igk_ilog("update group");
+				$tb = array();
+				if (is_array($gf)){
+					foreach($gf as $group){
+						// igk_wln($c);
+						// igk_wln($group);
+						// igk_exit();
+						if($group->group == $o->{'@group'})
+							continue;
+						$tb[] = $group;
+					}
+					$tb[] = $o;
+					// igk_conf_unset($gf, "[group=".$o->group."]");
+					$cnf->{"filters"}= $tb;
+				}else{
+					$cnf->{"filters"} = $tt ?? $o;					
+				}
+			}
+		}else if ($o==null){
+			//unset group
+			// igk_wln("group : ".$group);
+			$c = igk_conf_get($gf, "[group=".$group."]",null, 1);
+			if ($c){
+				$tb = array();
+				foreach($gf as $grp){
+						// igk_wln($c);
+						// igk_wln($group);
+						// igk_exit();
+						if($grp->group == $group)
+							continue;
+						$tb[] = $grp;
+				}
+				$cnf->{"filters"}= $tb;
+			}
+		}else{	
+			$cnf->{"filters"} = $tt ?? $o;
+		}		
+		igk_cgt_store_configs($cnf);	
+		if (igk_is_ajx_demand()){
+			igk_html_toast("Filter updated");
+		}else{		
+			$referer = igk_getv($_SERVER, "HTTP_REFERER");
+			if ($referer){
+				if (strpos($referer, "?") === false){
+					$referer.="?";
+				}else 
+					$referer.="&";
+				$referer.="filter_msg=update";
+				igk_navto($referer);
+			}		
+		}
+		igk_exit();
+	}
+		
+	///<summary>fitler page </summary>
+	public function action_filter(){
+		$page = get_query_var("pagename");
+		$gp = igk_getr("gp");
+		$filters = igk_getr("filter");
+		igk_cgt_set_env("cgt://filterpagequery", $filters);
+		igk_cgt_set_cookie('filter-'.$gp, ['p'=>$gp,'f'=>$filters]);
+	}
+	
+	public function action_downloadquery(){
+		$d = igk_createXMLNode("query");
+		$s = $d->Render();
+		igk_download_content("query.xml", strlen($s), $s);
+		igk_exit();
+	}
+	
+	public function action_addgroup(){
+		$ref_uri = igk_sys_srv_referer();
+		if (igk_getr("confirm")){
+			
+			//igk_wln($_REQUEST);		
+
+			
+			$o = igk_get_robj();
+			$cnf = igk_cgt_get_conf("offers") ?? igk_creatObj_array(["group"]);
+			
+			
+			if (empty($o->clName)){
+				igk_notifyctrl($this->getSettingGroup())->addSuccess("failed to add product");
+				igk_navto($ref_uri);
+			}
+			$o->clName = igk_get_identifier(strtolower($o->clName));
+			
+			//marshaling obj to request data definition
+			$v_o = igk_createObj(array(
+			"name"=>igk_getv($o,"clName"),
+			"key"=>igk_getv($o, "clKey"),
+			"offers"=>igk_getv($o, "clOffers")
+			));
+			
+			// igk_wln($v_o);
+			// igk_debug(1);
+			$path = "group/[name=Gite]";
+			$g = igk_conf_get($cnf, $path);
+			
+			// igk_wln($path);
+			// igk_wln($g);
+			
+			// exit;
+			
+			if ($g == null || ($g->name!= $o->clName)){ //group definition not found
+				$cnf->group[] = $v_o;
+			}
+			else{
+				//replace the group definition in $cnf
+				$tab = array();
+				foreach($cnf->group as $k=>$v){
+					if ($o->clName == $v->name){
+						$tab[] = $v_o;
+						continue;
+					}
+					$tab[] = $v;
+				}
+				$cnf->group = $tab;
+			}
+			$conf = igk_cgt_configs();			
+			igk_conf_set($conf, $cnf , "offers");
+			igk_cgt_store_configs();			
+			igk_navto($ref_uri);
+			igk_exit();
+		}
+		
+		$d = igk_createNode("div");
+		$d["class"]="alignc";
+		$frm = $d->addForm();
+		$frm->setTitle("Add Group");
+		$frm["class"]="dispib alignl";
+		$frm["style"]="max-width:520px; min-width:420px;";
+		$frm["action"] = "?cgt-actions=addgroup";
+		$ul = $frm->addUl();		
+		igk_html_buildform($ul, array(
+		"clName"=>array("require"=>1, "attribs"=>array("value"=>"", "placeholder"=>"nom de l'association")),
+		// "clOffers"=>array("require"=>1),
+		// "clFilter"=>array()
+		"confirm"=>array("type"=>"hidden", "attribs"=>array("value"=>1))
+		));
+		$v_cl = $frm->addPanelBox()->addDiv()->setStyle("max-height:420px; overflow-y:auto");
+		$v_cl->add("i")->Content = "*Association utilisé pour grouper les types d'offres";
+		
+		// $thesrv = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS,1);
+		
+		// $xml = $thesrv->getAllTypes();
+		
+		// $v_cl->addDiv()->Content = __("Offers"); 
+		// // $v_cl->addObData(htmlentities($xml));
+		// $s = igk_cgt_createxsl_types("clOffer");
+		// if (igk_is_debug())
+			// $v_cl->addDiv()->Content = igk_cgt_get_last_query();
+		// $b = $v_cl->addDiv()->setStyle("max-height:8em; overflow-y:auto;");
+		// $b->addxslt($xml, $s->Render(), 1);
+		
+		
+		// $v_cl = $frm->addPanelBox()->addDiv()->setStyle("max-height:420px; overflow-y:auto");
+		// $v_cl->addDiv()->Content = __("Filters"); 
+		// $b = $v_cl->addDiv()->setStyle("max-height:8em; overflow-y:auto;");
+		// $b->Content = "Configurer les filtres autorisés pour le groupe";
+		// $b->addDiv()->setClass("filter_g");
+		$title = igk_createNode("div")->setClass("dispib")->setStyle("min-width:420px; font-size:1em; text-align: left;");
+		$title->Content = _("PageGroup");
+		$frm->addDiv()->addObData('submit_button');	
+
+		$f = igk_cgt_styles_dir()."/group_view.css";
+		if (file_exists($f))
+			$d->addStyle()->Content = igk_io_read_allfile($f);
+		else		
+		$d->addStyle()->Content = <<<EOF
+.igk-js-notify .content-z .title{
+	text-align:center;
+}
+.igk-js-notify-box:before{
+	z-index:10;
+	content:' ';
+	position:absolute;
+	background-color:black;
+	opacity:0.8;
+	width:100%;
+	height:100%;
+}
+EOF;
+		igk_ajx_notify_dialog($title, $d);
+		igk_exit();
+		
+	}
+	
+	private function action_drop_group(){
+		$ref_uri = igk_sys_srv_referer();
+		//igk_wln("drop group : ".$ref_uri);
+		$name = igk_getr("n");
+		$cnf = igk_cgt_get_conf("offers");		
+		$tab = array();
+		$i= 0;
+		if ($cnf){
+		foreach($cnf->group as $k=>$v){
+				if ($name == $v->name){
+					$i=1;
+					continue;
+				}
+				$tab[] = $v;
+		}
+		}
+		$not = igk_notifyctrl($this->getSettingGroup());
+		if ($i){
+			// igk_ilog("update ");
+			// igk_ilog($cnf);
+			$cnf->group = $tab;		
+			$conf = igk_cgt_configs();
+			igk_conf_set($conf, $cnf , "offers");
+			igk_cgt_store_configs();
+			$not->addSuccess("setting update");
+		}else{
+			$not->addError("setting not update");
+		}
+		//igk_wln("data : ".$i);
+		//igk_navto($ref_uri);
+		//igk_navto_referer();
+		if (igk_is_ajx_demand())
+			igk_exit();
+		$this->_replaceUri();
+	}
+	
+	//private function edit_query($d){
+		// $pan = $d->addPanelBox();
+		// igk_html_title($pan->addDiv(), "Query Edition");
+		
+		// $pan->addDiv()->addObData(function(){
+			// wp_editor("xlm data", "wp");
+		// });
+	//}
+	
+	
+	///<summary>setup navigation betweed widget pages</summary>
+	public function action_nav(){		
+		//setup navigation page
+		igk_cgt_set_env("cgt://navpage", array(
+			'page'=>igk_getr("i"),
+			'token'=>igk_getr("token"),
+			'group'=>igk_getr("gp")
+		));
+	}
+	
+	
+	private function filter_group($d){
+		$frm = $d->addForm();
+			$frm["action"] = igk_io_request_uri();
+			$frm["method"] = "post";
+			$frm->setClass("wrap")->setStyle("margin:0px");
+			$box = $frm->addPanelBox();			
+			$box->add("h2")->setClass("dispib")->setStyle("margin-right:10px")->Content = R::ngets("title.querygroup");			
+			$box->addA(igk_io_request_uri()."action=addquery")->setClass("page-title-action")->Content =  R::gets("Add");
+			
+			
+			$dv = $box->addDiv();
+			$table = $dv->addTable();
+			$table->setClass("widefat fixed striped");
+			$p = igk_cgt_get_conf("queryGroups", null);
+			$p=1;
+			if ($p==null){
+				$dv->addDiv()->Content = "Generate default settings";
+			}
+			else{
+				
+				$tr = $table->add("tr");
+				$tr->addTh()->setStyle("width:32px")->addInput("cbq", "checkbox",'all');
+				$tr->addTh()->setClass("manage-column column-title column-primary sortable desc")->Content = _("Name");
+				$tr->addTh()->setClass("manage-column column-title column-primary ")->Content = _("Expression");
+				$tr->addTh()->setClass("manage-column column-title column-primary ")->Content = _("Filters");
+				$tr->addTh()->setClass("manage-column column-title column-primary ")->Content = IGK_HTML_SPACE;
+				$p = array();
+				$p["Hebergement"] =(object)array("expression"=>"{in:'1,2,3', where:''}", "filter"=>array("Hotel", "Gite"));
+				$p["Evenement"] = (object)array("expression"=>"{in:'10,28,243', where:''}", "filter"=>array("Media"));
+				
+				foreach($p as $k=>$v){
+					$tr = $table->addTr();
+					$tr->addTd()->addInput("cbq", "checkbox",$k);
+					$tr->addTd()->addA("#")->Content = $k; //name
+					//query espression
+					$tr->addTd()->addA('#')->Content = $v->expression; //name
+					$tr->addTd()->Content = igk_cgt_html_filter($v->filter);//"available filter"; //name
+					$tr->addTd()->Content =IGK_HTML_SPACE;//"available filter"; //name
+					
+				}
+			}		
+			
+			$frm->addInput("action", "hidden", "cgtqs");
+			$frm->addObData("submit_button");
+	}
+	
+}
+
+//init plugin admin data
+new CGT_Admin();
+
+
+add_filter(IGKWP_FILTERS::NAV_MENU_ITEM, function($i){
+	if(func_num_args()>1){
+		$args = func_get_args()[1];
+		if (isset($args))
+			igk_ilog($args->theme_location);
+	}	
+	return $i;
+});
+
+
+//handle the page view : template
+//note: page must be first a
+add_filter( "page_template", function($t){	
+	
+	$pagename = strtolower(get_query_var('pagename'));		
+	$groups = igk_cgt_get_group();
+	$tab = array();
+	foreach($groups  as $k=>$v){
+		$tab[$v->name] = $v;
+	}
+	if (isset($tab[$pagename]) || $pagename=="details"){
+		return igk_io_dir(IGK_CGT_PLUGIN_DIR."/View/page.php");
+	}
+	return $t;
+	
+});
+
+function igk_cgt_handle_uri($uri){
+
+	if ((strlen($uri)>0) && ($uri[0]=="/")){
+		$uri = substr($uri, 1);
+	}
+	$c = explode("/", $uri);
+	if (empty($c[igk_count($c)-1]))
+		array_pop($c);
+
+	if (igk_count($c)>1){
+		$n = $c[0];
+		$tab = igk_cgt_get_group_array();
+		if (isset($tab[$n]) || ($n=="details")){
+			//set the page name
+			global $wp_query;	
+			//to avoid WP warning			
+			if (empty($_POST)){
+				$GLOBALS["post"] = array("CGT"=>1);	
+			}
+			$wp_query->parse_query(array("page"=>"", "pagename"=>$n));
+			
+			$f = igk_io_dir(IGK_CGT_PLUGIN_DIR."/View/page.php");	
+		
+			include($f);
+			return 1;
+		}
+	}
+	return null;
+}
+
+add_filter("do_parse_request", function($x){		
+	$cgt_uri = igk_io_request_entry();
+	// $file = igk_getv($_SERVER, "SCRIPT_NAME");
+	// igk_io_request_entry();
+	// igk_wln(igk_io_base_uri()); //igk_getv($_SERVER, "SCRIPT_NAME");
+	
+	// $pagename = get_query_var('pagename'); 		// get query page name view
+// $page = max(1, get_query_var("page", 1)); 	// get query page for pagination
+// $offertype=1; 	
+// igk_wln($page);
+	// igk_wln("uri :::: ".$cgt_uri);
+// igk_wln($pagename);
+	// igk_wln($_SERVER);
+// igk_exit();
+	
+	// igk_exit();
+	if (igk_cgt_handle_uri($cgt_uri)){
+		return 0;
+	}
+	return $x;
+});
+
+?>

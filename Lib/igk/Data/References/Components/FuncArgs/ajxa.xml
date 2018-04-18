@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AjxA>
+<attr name="lnk" fr="Le lien" require="1" />
+<attr name="target" fr="cible du resultat" />
+<attr name="method" fr="methode par défaut de la requete. POST est la valeur par defaut"></attr>
+</AjxA>

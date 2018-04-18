@@ -1,0 +1,9 @@
+.box-o > div{
+	cursor:pointer;
+}
+.box-o > div:hover{
+	text-decoration:underline;
+}
+li[rol]{
+	display:none;
+}

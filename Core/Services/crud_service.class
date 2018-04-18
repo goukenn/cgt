@@ -1,0 +1,73 @@
+<?php
+class crud_service extends __base_ns\base_service{
+	public function __construct(){
+		parent::__construct();
+		$this->setContent(igk_cgt_get_conf("default/crudContent",2));
+	}
+	public function getType(){
+		return "offer";
+	}	
+	
+	///<summary>get offer details query</summary>
+	public function getOfferDetails($id){				
+		return $this->sendQuery($id);
+	}
+	public function toObject($r){
+		return igk_conf_load_content($r, "offres");
+	}
+	
+	
+	
+	public function Exists($id){
+		$t =array($this->getZip(), $this->getFormat());
+		$this->setZip(0);
+		if (!preg_match("/(xml|json)/", $t[1])){
+			$this->setFormat("xml");
+		}
+		$o =$this->sendQuery("{$id}/exists");
+		$this->setZip($t[0]);
+		$this->setFormat($t[0]);
+		return $o;		
+	}
+	
+	public function viewOfferDetails($id){
+		// $f = igk_io_dir(IGK_CGT_PLUGIN_DIR."/Articles/offers/details/1/{$id}");		
+		// if (file_exists($f)){
+			// igk_header_cache_output(3600);
+			// ob_clean();
+			// include($f);
+			// ob_flush();
+			// igk_exit();
+		// }else{
+			$g = $this->toObject($this->getOfferDetails($id));
+			if ($g){
+				$this->viewList($g);
+			}
+		// }
+		return false;
+	}
+	
+	public function viewList($rtab){
+		$dv = igk_createNode("div");
+		
+		//igk_wln($rtab);
+		$keys = array(
+		"Name"=>"offre/nom",
+		// "Street"=>"offre/adresse1/rue",
+		// "Number"=>"offre/adresse1/numero",
+		// "PostalCode"=>"offre/adresse1/cp",
+		// "State"=>"offre/adresse1/province",
+		// "Country"=>"offre/adresse1/pays"		
+		);
+		//category
+		// $lang = igk_cgt_current_lang();
+		// igk_html_title($dv->addDiv(), igk_conf_get($rtab, "offre/typeOffre/label/[lang={$lang}]/value"));		
+		$fc = function()use($rtab, $keys){
+			igk_cgt_bind_offer_view("details.php", $rtab, ["keys"=>$keys], $this);
+		};
+		$fc = $fc->bindTo($this);
+		$dv->addDiv()->addObData($fc);	
+		$dv->RenderAJX();	
+	}
+}
+?>

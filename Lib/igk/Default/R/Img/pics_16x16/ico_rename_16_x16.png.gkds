@@ -1,0 +1,25 @@
+<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2015-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>28-01-2016 01:23:46</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_42218459" PixelOffset="None" BackgroundTransparent="True" Width="16" Height="16">
+      <Layer Id="Layer_26318721">
+        <Spline Tension="0" EnableTension="False" Closed="False" FillMode="Alternate" Points="2;8 9;8" Id="Spline_43325169" />
+        <Spline Tension="0" EnableTension="False" Closed="False" FillMode="Alternate" Points="11;2 13;2" Id="Spline_65511538" />
+        <Spline Tension="0" EnableTension="False" Closed="False" FillMode="Alternate" Points="12;2 12;14" Id="Spline_62598421" />
+        <Spline Tension="0" EnableTension="False" Closed="False" FillMode="Alternate" Points="11;14 13;14" Id="Spline_37000730" />
+        <Path Closed="True" FillBrush="Type:Solid;Colors:#0000;" StrokeBrush="Type:Solid;Colors:#F000;Width:2;DashStyle:Solid;LineJoin:Round" Id="Path_59311364">
+          <PointTypes>0;3;3;3;3;3;3;3;3;3</PointTypes>
+          <Points>2;13 2.166667;11.5 2;5.5 3;4 4;2.5 7;2.5 8;4 9;5.5 8.833333;11.5 9;13</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

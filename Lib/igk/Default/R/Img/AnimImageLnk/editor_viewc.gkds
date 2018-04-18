@@ -1,0 +1,37 @@
+<!--This is a gkds DrSStudio file 9.3.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <TargetSurface>2DDrawingSurface</TargetSurface>
+  </Project>
+  <Documents>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="32" Height="32" Id="LayerDocument_32986066">
+      <Layer GammaCorrection="0" Id="Layer_31348100">
+        <Circle Radius="15.55635" Center="16;16" FillBrush="Type:Solid;Colors:#FF626262;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_46827003" />
+        <Path Closed="True" FillMode="Alternate" FillBrush="Type:Solid;Colors:#FF009CFF;" StrokeBrush="Type:Solid;Colors:#FFFF;" Id="Path_6266924">
+          <PointTypes>0;3;3;3;1;1;1;1;1;1;1;1;1;1;3;3;3;3;3;3;3;3;3;1;161</PointTypes>
+          <Points>20.7757;9.44078 19.96828;9.751328 19.17328;10.80719 18.3907;12.60836 14.51508;21.49621 11.51519;21.49621 7.285546;9.44078 6.288691;9.44078 6.288691;9.002909 14.15174;9.002909 14.15174;9.44078 12.94992;9.44078 15.73553;17.18271 17.60812;12.73879 17.72613;12.45308 17.8193;12.15651 17.88762;11.84907 17.95593;11.54163 17.9901;11.29164 17.9901;11.0991 17.9901;9.993554 17.44975;9.44078 16.36904;9.44078 16.36904;9.002909 20.7757;9.002909</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="32" Height="32" Id="LayerDocument_32986066">
+      <Layer GammaCorrection="0" Id="Layer_31348100">
+        <Rectangle Bounds="0;0;32;32" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_30999443" />
+        <Path Closed="True" FillMode="Alternate" FillBrush="Type:Solid;Colors:#F000;" Id="Path_6266924">
+          <PointTypes>0;3;3;3;1;1;1;1;1;1;1;1;1;1;3;3;3;3;3;3;3;3;3;1;161</PointTypes>
+          <Points>20.7757;9.44078 19.96828;9.751328 19.17328;10.80719 18.3907;12.60836 14.51508;21.49621 11.51519;21.49621 7.285546;9.44078 6.288691;9.44078 6.288691;9.002909 14.15174;9.002909 14.15174;9.44078 12.94992;9.44078 15.73553;17.18271 17.60812;12.73879 17.72613;12.45308 17.8193;12.15651 17.88762;11.84907 17.95593;11.54163 17.9901;11.29164 17.9901;11.0991 17.9901;9.993554 17.44975;9.44078 16.36904;9.44078 16.36904;9.002909 20.7757;9.002909</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="32" Height="32" Id="LayerDocument_32986066">
+      <Layer GammaCorrection="0" Id="Layer_31348100">
+        <Circle Radius="15.55635" Center="16;16" FillBrush="Type:Solid;Colors:#FEEE;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_46827003" />
+        <Path Closed="True" FillMode="Alternate" FillBrush="Type:Solid;Colors:#FF009CFF;" StrokeBrush="Type:Solid;Colors:#FFFF;" Id="Path_6266924">
+          <PointTypes>0;3;3;3;1;1;1;1;1;1;1;1;1;1;3;3;3;3;3;3;3;3;3;1;161</PointTypes>
+          <Points>20.7757;9.44078 19.96828;9.751328 19.17328;10.80719 18.3907;12.60836 14.51508;21.49621 11.51519;21.49621 7.285546;9.44078 6.288691;9.44078 6.288691;9.002909 14.15174;9.002909 14.15174;9.44078 12.94992;9.44078 15.73553;17.18271 17.60812;12.73879 17.72613;12.45308 17.8193;12.15651 17.88762;11.84907 17.95593;11.54163 17.9901;11.29164 17.9901;11.0991 17.9901;9.993554 17.44975;9.44078 16.36904;9.44078 16.36904;9.002909 20.7757;9.002909</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

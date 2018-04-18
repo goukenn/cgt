@@ -1,0 +1,139 @@
+<?php 
+
+//create a designer header bar and hierachy
+$t->ClearChilds();
+
+if (!igk_is_conf_connected())
+	return;
+
+$this->inithierachy($t);
+
+
+$base_uri = igk_ctrl_get_cmd_uri($this,'');
+$t->addBalafonJS()->Content = igk_create_expression_callback("return \"igk.winui.designer.init(this,{uri:'\".igk_ctrl_get_cmd_uri(\$n,'').\"'});\";", array('n'=>$this));
+
+// <<<EOF
+// igk.winui.designer.init(this,{uri:'{$base_uri}'});
+// EOF;
+$t->addOnRenderCallback(igk_create_func_callback(array($this,'_storeCurrentCtrl')));
+
+$t["igk-node-disable-selection"] = 1;
+$t["dropuri"]=$this->getUri("dragdrop");
+$r = $t->addRow();
+$dv = $r->addDiv();
+
+
+$sv = $dv->addCell()->setClass("adm-option")->setStyle("float:right");
+$sv->addDiv()->Content = "Welcome, <a href='#'>admin</a>";
+
+
+$a = $dv->addDesignerButton();
+$a->addSpan()->setClass("ibtn")->addSvgSymbol('balafon_logo');
+$a->addSpan()->setClass("scr-reader")->Content = 'About balafon';
+
+$l = $a->addUl();
+$l["class"]="sub-menu";
+igk_html_load_menu_array($l, 
+array(
+"about.igkdev"=>'http://igkdev.com/about',
+"about.balafon"=>'http://igkdev.com/balafon/about'
+)
+);
+
+
+
+$a = $dv->addDesignerButton();
+$a->addA(igk_io_baseUri())->Content = igk_get_current_ctrl_title();
+
+
+$a = $dv->addDesignerButton()->addA(
+igk_io_baseUri()."/!@sys//".$this->Name."/design"
+);
+$a->addSpan()->setClass("ibtn")->addSvgSymbol('plume');
+$a->addSpan()->setClass("scr-reader")->Content = R::ngets('btn.designpage');
+
+
+
+$a = $dv->addDesignerButton();
+$a->addSpan()->setClass("ibtn")->addSvgSymbol('add_d');
+$a->addSpan()->setClass("scr-reader")->Content = R::ngets('btn.insert');
+
+//menu add
+$l = $a->addUl();
+$l["class"]="sub-menu";
+igk_html_load_menu_array($l, 
+array(
+"article"=>$this->getUri('addArticle'),
+"view"=>$this->getUri('addView'),
+"controller"=>$this->getUri('addcontroller'),
+"menu"=>$this->getUri('addmenu'),
+"mediafile"=>$this->getUri('addmedia'),
+)
+);
+
+
+
+// $a = $dv->addDesignerButton()->addA();
+// $a->addSpan()->setClass("ibtn")->addSvgSymbol('add_d');
+// $a->addSpan()->setClass("scr-reader")->Content = R::ngets('btn.messagecount');
+
+
+$a = $dv->addDesignerButton()->addA();
+$a->addSpan()->setClass("ibtn")->addSvgSymbol('comments');
+$a->addSpan()->setClass("scr-reader")->Content = R::ngets('btn.comments');
+$a->addSpan()->setClass("sder")->Content = 0;
+
+
+//$b = $dv->addDesignerButton();
+$a = $dv->addDesignerButton();
+$a->addSpan()->setClass("ibtn")->addSvgSymbol('view');
+$a->addSpan()->setClass("sder")->Content = R::ngets("lb.views");
+$ul = $a->add('ul')->setClass('posab');
+// $ul->Content = igk_create_func_callback(array($this,"CurrentControllerView"), array($ul));
+$ul->addRenderingExpression(igk_create_node_callback(array($this,"CurrentControllerView")));
+
+
+
+$a = $dv->addDesignerButton();
+$a->addSpan()->setClass("ibtn")->addSvgSymbol('package');
+$a->addSpan()->setClass("scr-reader")->Content = R::ngets("btn.reader.configure");//sigk_create_func_callback(array($this,'_storeCurrentCtrl'));
+$a->addSpan()->setClass("sder")->setCallback("AcceptRender", "\$this->Content = \$ctrl->getDesignCtrlName(); return true;",array("ctrl"=>$this));
+$ul = $a->add('ul')->setClass('posab');
+$ul->addRenderingExpression(igk_create_node_callback(array($this,"CurrentNavigableController")));
+
+if (igk_server_is_local()){
+$u = igk_ctrl_get_cmd_uri($this, 'exploreFolder');
+$a = $dv->addDesignerButton();
+$a["onclick"]="javascript: ns_igk.ajx.post('{$u}', null, function(xhr){if (this.isReady()){ prompt('copy location Ctrl+C', xhr.responseText);}});return false;";
+$a->addSpan()->setClass("scr-reader")->Content = "location";
+$a//->addA(igk_ctrl_get_cmd_uri($this, 'exploreFolder'))
+->setClass("ibtn")->addSvgSymbol('open');
+
+
+
+
+$a = $dv->addDesignerButton();
+$a->addIGKGlobalThemeSelector();
+$a->addSpan()->setClass("scr-reader")->Content = "theme";
+
+
+$a = $dv->addDesignerButton();
+$a->addIGKGlobalLangSelector();
+$a->addSpan()->setClass("scr-reader")->Content = "language";
+
+
+
+}
+
+
+
+
+// $a->addSpan()->setClass("sder")->Content = igk_create_func_callback('igk_get_env', array("sys://ctrl/current__invoke_ctrl"));
+
+
+
+
+
+
+
+?>

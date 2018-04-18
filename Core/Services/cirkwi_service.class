@@ -1,0 +1,8 @@
+<?php
+
+class cirkwi_service extends __base_ns\base_service{
+	public function getType(){
+		return "cirkwi";
+	}
+}
+?>

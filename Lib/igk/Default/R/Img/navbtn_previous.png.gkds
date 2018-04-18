@@ -1,0 +1,17 @@
+<!--This is a gkds DrSStudio file 9.3.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <TargetSurface>2DDrawingSurface</TargetSurface>
+  </Project>
+  <Documents>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="48" Height="48" Id="LayerDocument_44580344">
+      <Layer GammaCorrection="0" Id="Layer_51008978">
+        <Circle Radius="20.51828" Center="24;24" FillBrush="Type:Solid;Colors:#FF6A6A6A;" StrokeBrush="Type:Solid;Colors:#FFB7B7B7;" Id="Circle_22985262" />
+        <Line StrokeBrush="Type:Solid;Colors:#FFFF;Width:2;DashStyle:Solid;LineJoin:Round" EndPoint="14;23" StartPoint="29;9" Id="Line_1062884" />
+        <Line StrokeBrush="Type:Solid;Colors:#FFFF;Width:2;DashStyle:Solid;LineJoin:Round" EndPoint="29;37" StartPoint="14;23" Id="Line_64961655" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

@@ -1,0 +1,17 @@
+<?php
+
+class releases_service extends __base_ns\base_service{
+	public function getType(){
+		return "releases";
+	}
+	public function getCurrentRelease(){
+		return $this->sendQuery("current");
+	}
+	public function getAll(){
+		return $this->sendQuery("all");
+	}
+	public function getVersion($type){
+		return $this->sendQuery($type);
+	}
+}
+?>

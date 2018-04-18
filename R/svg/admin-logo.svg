@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!--App : DrStudio-->
+<!--Author : Charles A.D. BONDJE DOUE-->
+<!--version : 1.0-->
+<!--description : File generate by SVGDrawing2DEncoderVisitor-->
+<svg width="20" height="20" id="LayerDocument_59199654" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<path id="Path_30800315" fill="#F9F9F9" stroke="none" stroke-width="1" d="M 5.098601,12.94968 C 2.619426,10.36272 2.706808,6.255798 5.293775,3.776625 7.880739,1.29745 11.98766,1.384832 14.46683,3.971797 16.90879,6.519934 16.8659,10.55269 14.37028,13.04831 L 11.3653,10.04333 C 12.1177,9.147907 12.1177,7.773572 11.3653,6.878153 10.51441,5.865526 9.051018,5.865526 8.20013,6.878155 7.459483,7.759584 7.446408,9.108128 8.169798,10.00645 zM 1.000001,15.09657 L 18.56543,15.09657 18.56543,19 1.000001,19 z" fill-rule="evenodd" />
+</svg>

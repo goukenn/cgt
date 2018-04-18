@@ -1,0 +1,14 @@
+<?php
+	if ($this->getCanInitDb())
+	{		
+		parent::initDb();
+		$db = $this->getDb();
+		if ($db !=null){
+			$db->initdb();
+		}
+		$this->resetParam();			
+	}
+	if ($s){
+		igk_navto($this->getAppUri());
+	}
+?>

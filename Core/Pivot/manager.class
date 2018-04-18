@@ -1,0 +1,17 @@
+<?php
+/*
+//
+//Author : C.A.D BONDJE DOUE
+//Date : 07/12/2017
+//
+*/
+class manager{
+	public function getVersion(){		
+		$d = igk_cgt_get_service("default");		
+		$g = igk_createNode("textarea");
+		$g->Content = $d->sendQuery("all");
+		$g->RenderAJX();
+		return 3.1;
+	}
+}
+?>

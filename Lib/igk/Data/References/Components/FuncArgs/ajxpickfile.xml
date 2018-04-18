@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AjxPickfile><attr name="uri" required="1" desc="uri where to send pickfile" />
+<attr name="param" required="1" desc="json of extra parameters. supported properties = complete|accept|start|progress" />
+</AjxPickfile>

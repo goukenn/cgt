@@ -1,0 +1,70 @@
+<?php
+// igk_ilog($fname);
+//hierachi options tab
+$t->clearChilds();
+$t->Clear();
+$ul = $t->addUl();
+// $ul->addDiv()->Content = "Page : ".igk_app()->Session->PageFolder;
+// return;
+
+//align
+$align = $ul->add("li");
+$align->setStyle("padding:0px 8px")->addSvgSymbol("align");
+$fc = function($t){
+	$ul = $t->addUl();
+	$ul["role"]="alignment";
+	$a = array("left", "center", "right", "justify");
+	foreach($a as $k){
+		$ul->addLi()->addA("#")->setAttributes(array("role"=>$k))->Content=$k;
+	}
+	// $ul->addLi()->addA("#")->setAttributes(array("role"=>"center"))->addFontSymbol("center")->Content="center";
+	// $ul->addLi()->addA("#")->setAttributes(array("role"=>"right"))->addFontSymbol("left")->Content="right";
+	// $ul->addLi()->addA("#")->setAttributes(array("role"=>"justify"))->addFontSymbol("left")->Content="justify";
+};
+$fc($align);
+
+       
+
+
+	   
+//font                     
+$fc = function($t){
+	$ul = $t->addUl();
+	$ul["role"]="font";
+	$a = array("0.5em", "1.0em", "1.5em", "1.78em", "2.1em", "3.2em");
+	foreach($a as $k){
+		$ul->addLi()->addA("#")->setAttributes(array("role"=>$k))->Content=$k;
+	}
+	// $ul->addLi()->addA("#")->setAttributes(array("role"=>"center"))->addFontSymbol("center")->Content="center";
+	// $ul->addLi()->addA("#")->setAttributes(array("role"=>"right"))->addFontSymbol("left")->Content="right";
+	// $ul->addLi()->addA("#")->setAttributes(array("role"=>"justify"))->addFontSymbol("left")->Content="justify";
+};
+$li = $ul->add("li");
+$li->addA("#")->addSvgSymbol("font"); 
+$fc($li);
+                         
+//color                   
+$li = $ul->add("li");
+$li->addA("#")->setContent("col");
+$li->addUl()
+->setAttribute("role","color")
+->addLi()->addColorPicker();
+
+
+$li = $ul->add("li")->addA("#")->setContent("widget");
+$li->addPickColor();
+
+
+//custom style             
+
+$ul->add("li")->addA("#")->setContent("style");
+
+//custom style             
+$ul->add("li")->setClass("no-wrap")->setContent("device-mode")
+->addUl()->addLi()->addToggleStateButton("window10", "device-state");
+
+
+$ul->add("li")->addA(igk_ctrl_get_cmd_uri($this,'storeStyle'))
+->setAttributes(array("role"=>"store"))->setContent("store");
+
+?>

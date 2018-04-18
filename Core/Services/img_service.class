@@ -1,0 +1,38 @@
+<?php
+
+
+///base offer type : 268
+
+///<summary>represent the image service</summary>
+class img_service extends __base_ns\base_service{
+	
+	///<summary>return the offer type  of data</summary>
+	public function getOfferTypeOf(){
+		$g = igk_cgt_get_service("thesaurus") ?? igk_cgt_die("not found");
+		return $g->getTypeof(268);
+	}
+	public function getExtraOption(){
+		return null;
+	}
+	public function getImage($cgtCode){
+		return $this->sendQuery($cgtCode);		
+	}
+	public function getImageUri($cgtCode){
+		return igk_cgt_get_base_uri()."/img/".$cgtCode;
+	}
+	public function getPictoUri($t, $w=null, $h=null, $orig=1, $cl=null){
+		$extra="";
+		if ($w)
+			$extra.=";w=".intval($w);
+		if ($h)
+			$extra.=";h=".intval($h);
+		if ($orig)
+			$extra.=";modifier=ori";
+		if ($cl)
+			$extra.=";c=".$cl;
+		
+		return igk_cgt_get_base_uri()."/img/".$t.$extra;
+	}
+}
+
+?>

@@ -1,0 +1,193 @@
+<?php
+
+final class TabUriListener 
+extends IGKComponentListenerBase
+implements IIGKParamHostService //IGKStoreParameterObject
+{
+	private $m_ctrl;
+	private $m_row;
+	private $m_manifest;
+	
+	
+	public function setRow($r){
+		$this->m_row = $r;
+	}
+	public function setManifest($man){
+		$this->m_manifest = $man;
+	}
+
+	public function getCtrl(){
+		return $this->m_ctrl;
+	}
+	public function __construct($ctrl){
+		parent::__construct();
+		$this->m_ctrl = $ctrl;
+	}
+	public function __destruct(){
+		$id = $this->getParam(IGK_COMPONENT_ID_KEY);
+		if (empty($id)){
+			igk_getctrl(IGK_COMPONENT_MANAGER_CTRL, true)->nodeDisposed($this);
+		}
+		// igk_ilog("component kill ".$this->getParam(IGK_COMPONENT_ID_KEY));
+		
+	}
+	
+	public function update(){
+		$action = igk_getr("update");
+		if ($action){
+			$this->$action();
+		}
+	}
+	public function global(){
+		$dv = null;
+		if (igk_getr("update")==__FUNCTION__){
+			$row = igk_get_robj();
+			if ($this->m_ctrl->Db->updateTemplate($row)){
+				$this->m_row = $row;
+			}
+			
+			igk_notifyctrl(strtolower(__METHOD__))->addMsg("updated");
+			
+			igk_resetr();
+			$dv = igk_createNode("ajxLnkReplace",null,array(".".strtolower(igk_css_str2class_name($this->Name)). ".global"));
+			
+		}else{
+			$dv = igk_createNode("div");	
+		}
+		// igk_wln("call in glboal listener");
+		// exit;
+		
+		
+		igk_ctrl_bind_css($this->m_ctrl,$dv,strtolower(__FUNCTION__));
+		
+		$dv->addNotifyHost(strtolower(__METHOD__));
+		$frm = $dv->addForm();
+		$frm["action"] = $this->getUri("global/update=1");
+		igk_html_buildform($frm->addDiv(), $this->m_row);
+		
+		$frm->addInput("update", "hidden", "global");
+		$frm->addInput("com_id", "hidden", $this->getParam(IGK_COMPONENT_ID_KEY));		
+		$dv->RenderAJX();
+		igk_exit();		
+	}
+	public function visualassets($page=null){
+		
+		$dv = igk_createNode("div");
+		$dv->clearChilds();
+		$dv->setClass("igk-row");
+		
+		$lb = $dv->addDiv()->setClass(" igk-col igk-col-12-3")->add("ul")->setClass("igk-winui-listbox");
+		
+		
+		$u = $this->getUri(__FUNCTION__."&p=");
+		$page = $page ?? "logo";
+		$menu = array("logo"=>array("view"=>function($c, $ctrl){			
+			$c->addDiv()->setContent("100px x 100px");
+			$c->addDiv()->add("img")->setAttribute("src", $ctrl->getUri("res/logo/100/100/".$ctrl->m_row->clId));
+			$tdv = $c->addDiv()->setClass("igk-btn igk-btn-default");			
+			$tdv->addSpan()->addAJXPickFile($ctrl->getUri("storelogo"))->setAttribute("value", "...");			
+			$c->addDiv()->addAJXA($this->getUri("clearLogo"))->setClass('igk-btn igk-btn-default')->setContent("Clear logo");
+		}), "splash"=>array(), "badge"=>array("view"=>"igk_template_view_badge"
+		), "favicon"=>array());
+		
+		foreach($menu as $k=>$v){
+			$li = $lb->add("li");
+			if ($k == $page){
+				$li["class"]= "igk-active";
+			}
+			$li->addAJXA($this->getUri(__FUNCTION__."/{$k}"))->Content = R::ngets("template.asset.menu.{$k}");
+		}
+		
+		// $lb->add("li")->addAJXA($this->getUri(__FUNCTION__."/logo"))->Content = "Store Logo";
+		// $lb->add("li")->addAJXA($this->getUri(__FUNCTION__."/splash"))->Content = "SplashScreen";
+		// $lb->add("li")->addAJXA($this->getUri(__FUNCTION__."/badge"))->Content = "Badge";
+		// $lb->add("li")->addAJXA($this->getUri(__FUNCTION__."/favicon"))->Content = "Favicon";
+		
+		
+		$c = $dv->addDiv()->setClass("igk-col igk-col-12-9")->addDiv();
+		
+		
+		// igk_wln("for ".$page);
+		// igk_wln("for ".base64_decode(igk_getr("q")));
+		// igk_die("d");
+		$c->addSectionTitle(5)->Content = $page==null ? R::ngets("title.logo" ) : R::ngets("title.{$page}");
+		
+		$c->addDiv()->addNotifyhost("template://assets");
+		
+		
+		$callback = igk_getv($menu[$page], "view") ?? "igk_template_view_assets_{$page}";		
+		if (is_callable($callback)){
+			$callback($c, $this);
+		}
+		
+		
+		$dv->addClearTab();
+		
+		if(igk_getr("ajx-lnk")){
+			 $n = igk_createNode("ajxLnkReplace",null, array("^.igk-tabcontent"));
+			 $n["igk-lnk-index"]="0";
+			 $n->add($dv);
+			 $n->RenderAJX();
+		}else
+			$dv->RenderAJX();
+	}
+	//retrieve resource from manifest
+	public function res($n,$w,$h){
+		$d = $this->m_ctrl->getPackageManifestFile($this->m_row->clPackageName);		
+		ob_clean();
+		header("Content-Type: image/png");
+		$e = igk_zip_unzip_entry($d, "r/Assets/$n.{$w}x{$h}.png");		
+		igk_wl($e);
+		igk_exit();
+		
+	}
+	
+	private function _validatePicture($c, $W, $H){
+		//"check for image 
+			$dc = imagecreatefromstring($c);
+			if ($dc){
+				$w = imagesx($dc);
+				$h = imagesy($dc);
+				
+				return ($W==$w) && ($h==$H);
+			}
+			return 0;
+	}
+	public function storelogo(){
+		// igk_wln("store logo");
+		// igk_wln($this->m_row);
+		$d = $this->m_ctrl->getPackageManifestFile($this->m_row->clPackageName);
+		// igk_wln($d);
+		$c = igk_io_get_uploaded_data();
+		$r = 0;
+		if ((file_exists($d)) && !empty($c)){
+			
+			if ($this->_validatePicture($c, 100,100)){				
+				igk_zip_content($d, "r/Assets/logo.100x100.png", $c);				
+				$r =1;
+			}
+			
+			
+		}
+		if ($r){
+			igk_notifyctrl("template://assets")->addSuccessr("msg.fileuploaded");
+		}
+		else{
+			igk_notifyctrl("template://assets")->addError("file not uploaded");
+		}
+		$_REQUEST["ajx-lnk"] = 1;
+		$this->visualassets(null);
+	}
+	public function clearLogo(){
+		$d = $this->m_ctrl->getPackageManifestFile($this->m_row->clPackageName);		
+		if ((file_exists($d))){
+			if (igk_zip_delete($d, "r/Assets/logo.100x100.png")){
+				igk_notifyctrl("template")->addMsgr("msg.template.logodelete");
+			}
+		}
+	
+		$this->visualassets(null);
+	}
+}
+
+?>

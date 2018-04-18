@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TrackBarNode><attr name="id" required="1"></attr><attr name="value" required="1"></attr><attr name="min" def-v="0"></attr><attr name="max" def-v="100"></attr></TrackBarNode>

@@ -1,0 +1,31 @@
+<!--This is a gkds ICore file 9.7.r-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>01-03-2017 09:23:33</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_55508173" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_55439214">
+        <Group Matrix="1 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 1 , 0 , -1 , 0.5 , 0 , 1" Id="Group_51687369">
+          <Path Closed="True" FillBrush="Type:Solid;Colors:#0000;" StrokeBrush="Type:Solid;Colors:#FF0083FF;Alignment:Inset;Width:5;DashStyle:Solid;LineJoin:Round" Id="Path_26947355">
+            <PointTypes>0;1;1;129;0;1;1;129</PointTypes>
+            <Points>11;11 11;88 91;88 91;11 86;16 86;83 16;83 16;16</Points>
+          </Path>
+          <Path Closed="True" FillBrush="Type:Solid;Colors:#FF0083FF;" StrokeBrush="Type:Solid;Colors:#0000;Alignment:Inset;DashStyle:Solid;LineJoin:Round" Id="Path_57503608">
+            <PointTypes>0;1;1;129</PointTypes>
+            <Points>26.80136;21.14476 79.80136;73.14476 74.19863;78.85523 21.19864;26.85523</Points>
+          </Path>
+          <Path Closed="True" FillBrush="Type:Solid;Colors:#FF0083FF;" StrokeBrush="Type:Solid;Colors:#0000;Alignment:Inset;DashStyle:Solid;LineJoin:Round" Matrix="-4.371139E-08 , 1 , 0 , 0 , -1 , -4.371139E-08 , 0 , 0 , 0 , 0 , 1 , 0 , 100.5 , -0.5 , 0 , 1" Id="Path_57503608">
+            <PointTypes>0;1;1;129</PointTypes>
+            <Points>26.80136;21.14476 79.80136;73.14476 74.19863;78.85523 21.19864;26.85523</Points>
+          </Path>
+        </Group>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

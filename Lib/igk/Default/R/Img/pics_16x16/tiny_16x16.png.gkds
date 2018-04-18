@@ -1,0 +1,21 @@
+<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2015-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>21-12-2015 10:12:10</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_65058375" PixelOffset="None" BackgroundTransparent="True" Width="16" Height="16">
+      <Layer Id="Layer_64265743">
+        <Bezier Closed="True" Points="1;7 6;6 3;2 8;1 11;3 14;2 15;6 14;9 11;9 10;13 5.5;10 8;7 1;7" FillBrush="Type:Solid;Colors:#FF1CACFF;" StrokeBrush="Type:Solid;Colors:#28000000;" Matrix="1 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 1 , 0 , 1" Id="Bezier_35527511" Def="1;7 6;6 3;2 8;1 11;3 14;2 15;6 14;9 11;9 10;13 5.5;10 8;7 1;7" />
+        <Line StrokeBrush="Type:Solid;Colors:#FFFF;" EndPoint="12;5" StartPoint="7;5" Id="Line_6349643" />
+        <Line StrokeBrush="Type:Solid;Colors:#FFFF;" EndPoint="12;7" StartPoint="7;7" Id="Line_21198088" />
+        <Line StrokeBrush="Type:Solid;Colors:#FFFF;" EndPoint="12;9" StartPoint="7;9" Id="Line_14290304" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

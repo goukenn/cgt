@@ -1,0 +1,1594 @@
+<?php
+//
+//author: C.A.D BONDJE DOUE
+//file: cgt-common.plib
+//desc:
+//
+
+
+//------------------------------------------------------------------
+//global cgt defined constants
+//------------------------------------------------------------------
+define("IGK_CGT_INSTALLDIR", dirname(__FILE__));
+define("IGK_CGT_CLASSES", "cgt://classes");
+define("IGK_CGT_NS", "CGT");
+
+define("IGK_CGT_VALID_OP_KEY", "cgt://validqueryoperator");
+
+define("IGK_CGT_INCDIR", IGK_CGT_INSTALLDIR."/Inc");
+define("IGK_CGT_CACHEDIR", IGK_CGT_INSTALLDIR."/Cache");
+define("IGK_CGT_VIEWDIR", IGK_CGT_INSTALLDIR."/View");
+define("IGK_CGT_WIDGETDIR", IGK_CGT_INSTALLDIR."/Widgets");
+
+define("IGK_CGT_PIVOT_NS", "http://pivot.tourismewallonie.be/files/xsd/pivot/3.1");
+define("IGK_CGT_SRV_QUERY", "query");
+define("IGK_CGT_SRV_THESAURUS", "thesaurus");
+define("IGK_CGT_GROUPNAME", 0xc00);
+define("IGK_CGT_PICTOSIZE", 0xc01);
+
+
+define("IGK_CGT_MCHOICE", "::m");
+
+//error code
+define("IGK_CGT_E_201", 0x0E0201);
+
+
+//-------------------------------------------------------------------
+//Global variable
+//-------------------------------------------------------------------
+global $CGT; //global cgt environment variable
+
+
+if(!defined("IGK_FRAMEWORK")){
+	//include igk_framework for wp
+	include_once(dirname(__FILE__)."/igk_framework.wp.pinc");
+}
+
+
+
+///<summary>get the plugin uri</summary>
+function igk_cgt_plugin_uri(){
+	$f = dirname(__FILE__);
+	$root = igk_str_rm_last(igk_html_uri(igk_getv($_SERVER, 'DOCUMENT_ROOT')), "/");
+	$g = substr($f, strlen($root));
+	$b = igk_getv($_SERVER, 'REQUEST_SCHEME')."://".igk_getv($_SERVER, 'HTTP_HOST');
+	return igk_html_uri($b."/".$g);	
+}
+///<summary>get the current lang</summary>
+function igk_cgt_current_lang(){
+return igk_cgt_get_env("cgt://currentlang")?? 
+(function(){	
+	$regex = "/^(?P<name>\w+)(,*)/i";
+	$tab = array();
+	$r = igk_getv($_SERVER, "HTTP_ACCEPT_LANGUAGE");
+	$s = "fr";
+	if ($r){
+		preg_match_all( $regex,  $r ,$tab);
+
+		$s = $tab["name"][0];
+	}
+	igk_cgt_set_env("cgt://currentlang", $s);
+	return $s;
+	
+})();
+}
+
+function _cgt($key){
+	$lang  = igk_cgt_get_env("cgt://lang");
+	if ($lang == null){
+		$lang = array();
+		$f = igk_cgt_data_dir()."/lang/resource.".igk_cgt_current_lang().".plib";
+		
+		if (file_exists($f))
+			include($f);
+		igk_cgt_get_env("cgt://lang", $lang);
+	}
+	
+	
+	return igk_getv($lang, $key, $key);
+}
+
+
+///<summary>xls filter for data selection</summary>
+function igk_cgt_createxsl_filters(
+	$id, 
+	$groupname=null,
+	$type="checkbox", 
+	$lang="fr",
+	$selection="MultiChoice|Choice",//case sensitive data allowed
+	$data=null
+){
+	
+	if (empty($selection))
+		igk_cgt_die("selection not valid");
+	
+	$tselect = explode("|", strtolower($selection));	
+	//remove empty value
+	igk_array_remove_empty($tselect);
+	
+	if (igk_count($tselect) == 0)
+		igk_cgt_die("selection not valid");
+	
+	
+	
+	$tselect = array_combine($tselect, $tselect);
+	
+
+	//$lang = igk_cgt_current_lang();
+	$n = igk_createXsltNode();
+	$n["xmlns:cgt"]= IGK_CGT_PIVOT_NS;	
+	
+	$n->add("xsl:variable")->setAttribute("name", "csupport")->setAttribute("select", "'{$selection}'");
+	
+	$t = $n->add('xsl:template')->setAttribute("match", "/");
+	
+	
+	// $t->add("div")->Content = "BASE mmmmm";
+	// return $n;
+	
+	
+	
+	$groupname = $groupname ?? "default".$id;
+	
+	
+	$s = igk_cgt_js_filter_data($groupname, $id);
+	
+	$filter_opts = "{data:'{$s}', select:'{$id}'}";
+	$dv = $t->add('div');
+	$dv["class"]= "setting group_".$id;
+	
+	$t->add('script')->Content =<<<EOF
+if (typeof(cgt)!='undefined'){ cgt.filters.init({$filter_opts});}
+EOF;
+	$each = $dv->add("xsl:for-each")->setAttribute("select", "cgt:thesaurus/cgt:spec/cgt:spec");		
+	
+	$each->add("xsl:sort")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+	
+	$li = $each->add('div');
+	// $li->add('input')->setAttributes(array(
+	// "id"=>"group_".$id,
+	// "name"=>$type=="radio" ? $id : $id."[]",
+	// "type"=>$type,
+	// "value"=>"{ current()/@urn }"));	
+	
+	//init root
+	$li->add('xsl:value-of')->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+	//call sub template
+	$li->add('xsl:call-template')
+	->setAttribute('name', 'sub')
+	->add("xsl:with-param")->setAttributes(array("name"=>"clevel",
+	"select"=>1));
+
+$template = $n->add('xsl:template')->setAttributes(array("name"=>"mcv"));//multichoice value	
+$template->add("xsl:param")->setAttribute("name", "p_name");
+//set input
+$dv = $template->add("li");
+$v_input = $dv->add("input")->setAttributes(array(
+"name"=>"data[{$id}][multichoice][{\$p_name}][]",
+"type"=>"checkbox",
+"value"=>"{current()/@urn}"
+));
+
+// $v_input["checked"] = "checked";
+
+
+
+$dv->add("label")->add("xsl:value-of")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+
+
+
+$template = $n->add('xsl:template')->setAttributes(array("name"=>"ccv"));//choic value	
+$template->add("xsl:param")->setAttribute("name", "p_name");
+$dv = $template->add("li");
+$dv->add("input")->setAttributes(array(
+"name"=>"data[{$id}][choice][{\$p_name}][{position()}]",
+"type"=>"radio",
+"value"=>"{current()/@urn}"
+));
+$bd = $dv->add("label");
+$bd->add("xsl:value-of")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+
+
+
+
+$template = $n->add('xsl:template')->setAttributes(array("name"=>"sub", "select"=>"spec"));
+$template->add("xsl:variable")->setAttribute("name", "number")->setAttribute("select",  "count(current()/cgt:spec)");
+$if = $template->add("xsl:if")->setAttribute("test", "\$number &gt; 0");
+//$dv = $if->add('div'); //remove sub div 
+// $dv->add("div")->add('xsl:value-of')->setAttribute("select", "count(current()/cgt:spec)");
+$irv = $if->add('xsl:for-each')->setAttribute("select", "current()/cgt:spec");
+// ->add('blockquote')->setAttribute("style", "padding-left:2em")->setContent("data - <xsl:value-of select=\"current()/cgt:label[@lang='{$lang}']/cgt:value\" ></xsl:value-of>")->add('xsl:call-template')->setAttribute('name', 'sub');
+
+$irv->add("xsl:variable")->setAttribute("name", "ctype")->setAttribute("select",  "current()/cgt:type");
+
+
+
+//choose
+$choose = $irv->add("xsl:choose");
+$if = $choose->add("xsl:when")->setAttribute("test", "contains(\$csupport , \$ctype) = false()");
+$if->add('xsl:call-template')->setAttribute('name', 'sub');
+
+$oth = $choose->add("xsl:otherwise");
+$rv = $oth->add('div')->setAttribute("style", "padding-left:16px");
+if (isset($tselect["uint"])){
+	$if = $rv->add("xsl:if")->setAttribute("test", "\$ctype = 'UInt'");
+	$mf = $if->add("div");
+	$mf["class"]="box-o uint";
+	// $mf->Content = "<font color='green'>Found Multichoice</font>";
+
+	$gg = $mf->add('div');
+	$gg->add("xsl:value-of")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+	// $gg->add(igk_html_node_text(" : type: "));
+	// $gg->add("xsl:value-of")->setAttribute("select", "current()/cgt:type");
+	$mf->add("xsl:for-each")->setAttribute("select", 'current()/cgt:spec')
+	->add('xsl:call-template')->setAttribute('name', 'mcv');	
+}
+
+//multichoice selection
+if (isset($tselect["multichoice"])){
+$if = $rv->add("xsl:if")->setAttribute("test", "\$ctype = 'MultiChoice'");
+$mf = $if->add("div");
+$mf["class"] ="box-o multichoice";
+$mf->setAttribute("box-o-data", "{ current()/@urn }");
+// $mf->Content = "<font color='green'>Found Multichoice</font>";
+
+$gg = $mf->add('div');
+$gg->add("xsl:value-of")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+// $gg->add(igk_html_node_text(" : type: "));
+// $gg->add("xsl:value-of")->setAttribute("select", "current()/cgt:type");
+
+$mf->add("xsl:variable")->setAttribute("name", "p_name")->setAttribute("select", "current()/@urn");
+$tmp = $mf->add("xsl:for-each")->setAttribute("select", 'current()/cgt:spec')
+->add('xsl:call-template')->setAttribute('name', 'mcv');
+$tmp->add('xsl:with-param')->setAttributes(array(
+"name"=>"p_name",
+"select"=>"\$p_name"
+));
+
+}
+
+
+
+if (isset($tselect["choice"])){
+$if = $rv->add("xsl:if")->setAttribute("test", "\$ctype = 'Choice'");
+$cv = $if->add("div")
+->setClass("box-o choice")
+->setAttribute("box-o-data", "{ current()/@urn }")
+;
+$cv->addDiv()->add("xsl:value-of")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+// $cv->add(igk_html_node_text(" : type: "));
+// $cv->add("xsl:value-of")->setAttribute("select", "current()/cgt:type");
+
+$idf = $cv->add("xsl:if");
+$idf["test"]="count(current()/cgt:spec) &gt; 0";
+$idf->add("xsl:variable")->setAttribute("name", "p_name")->setAttribute("select", "current()/@urn");
+$tmp = $idf->add("xsl:for-each")->setAttribute("select", 'current()/cgt:spec')
+->add('xsl:call-template')->setAttribute('name', 'ccv');
+$tmp->add('xsl:with-param')->setAttributes(array(
+"name"=>"p_name",
+"select"=>"\$p_name"
+));
+
+$idf = $cv->add("xsl:if");
+$idf["test"]="count(current()/cgt:spec) = 0";
+$dv = $idf->add("div");
+$dv->add('input')->setAttributes(array(
+"type"=>"radio",
+"name"=>"",
+"value"=>""
+));
+$dv->add("xsl:value-of")->setAttribute("select", "current()/@urn");
+
+
+}
+	return $n;
+}
+
+
+
+
+
+function igk_cgt_createxsl_types($id, $type="checkbox", $lang="fr"){		
+	$n = igk_createXsltNode();
+	$n["xmlns:cgt"]= IGK_CGT_PIVOT_NS;	
+	$t = $n->add('xsl:template')->setAttribute("match", "/");	
+	$dv = $t->add('div');	
+	$each = $dv->add("xsl:for-each")->setAttribute("select", "cgt:thesaurus/cgt:spec");		
+	
+	$each->add("xsl:sort")->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");
+	
+	$li = $each->add('li');
+	$li->add('input')->setAttributes(array(
+	"id"=>$id,
+	"name"=>$id."[]",
+	"type"=>$type,
+	"value"=>"{ current()/@order }"
+	));
+	$li->add('xsl:value-of')->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");	
+	
+	$dv->addScript()->Content = "if (igk.cgt) igk.cgt.initFilters();";
+	return $n;
+}
+///<summary>create a query zone to select data</summary>
+function igk_cgt_createxsl_selection($id, $type="checkbox"){
+	$lang = igk_cgt_current_lang();
+	$n = igk_createXsltNode();
+	$n["xmlns:cgt"]= IGK_CGT_PIVOT_NS;	
+	$t = $n->add('xsl:template')->setAttribute("match", "/");	
+	$dv = $t->add("div");
+	$each = $dv->add("xsl:for-each")->setAttribute("select", "cgt:thesaurus/cgt:spec/cgt:spec");	
+	$li = $each->add('li');
+	$li->add('input')->setAttributes(array(
+	"id"=>$id,
+	"name"=>$type=="radio" ? $id : $id."[]",
+	"type"=>$type,
+	"value"=>"{ current()/@urn }"));
+	$li->add('xsl:value-of')->setAttribute("select", "current()/cgt:label[@lang='{$lang}']/cgt:value");	
+	return $n;
+}
+
+function igk_cgt_createxsl_detect_query_offer_type(){
+	$lang = igk_cgt_current_lang();
+	$n = igk_createXsltNode();
+	$n["xmlns:cgt"]= IGK_CGT_PIVOT_NS;	
+	$n->add("xsl:output")->setAttributes(array(
+	"method"=>'text',
+	"standalone"=>'yes'
+	));
+	
+	$t = $n->add('xsl:template')->setAttribute("match", "/");	
+	$t->add("xsl:variable")
+	->setAttributes(array("name"=>"all", 
+	'select'=>'count(cgt:offres/cgt:offre/cgt:typeOffre)'));
+	
+	$dv = $t->add("div");
+	//$dv->add('xsl:value-of')->setAttribute("select", "\$all");
+	
+	$each = $dv->add("xsl:for-each")->setAttribute("select", "cgt:offres/cgt:offre/cgt:typeOffre");	
+	$each->add("xsl:sort")->setAttribute("select", "current()/@idTypeOffre");
+	$li = $each->add('li');
+	$li->add('xsl:value-of')->setAttribute("select", "current()/@idTypeOffre");
+	$li->add('xsl:if')->setAttribute('test', 'position() != $all ')
+	->add('div')->Content = ',';
+	return $n;
+}
+
+
+
+///<summary>detect criteria offer types</summary>
+function igk_cgt_detect_criteria_offer_types($queryCriteria){
+
+$qsrv =igk_cgt_get_service('query', 1);
+
+$qsrv->setPagined(0);
+$qsrv->setShuffle(0);
+$qsrv->setContent(0);
+$qsrv->setItemPerPage(0);
+
+$n = igk_cgt_createxsl_detect_query_offer_type();
+
+
+$xml = $qsrv->sendKeyRequest($queryCriteria, igk_cgt_build_query_request(array(), $queryCriteria));		
+
+if ($xml){
+	$s = igk_xslt_transform($xml, $n->Render());
+	$tab = array();
+	while(($c = strpos($s, ",")) != false){
+		$m = substr($s,0, $c);		
+		$tab[$m] = $m;
+		$s = substr($s, $c+1);
+		
+	}
+	if (!empty($s)){
+		$tab[$s] = $s;
+	}
+	return $tab;
+	// igk_io_w2file("d:\\temp\\offerlist.xml", $xml);
+}
+return null;
+}
+
+
+
+///<summary>get local group as array</summary>
+function igk_cgt_get_group_array(){
+	$key = "cgt://localgroups";
+	$d = igk_cgt_get_env($key);
+	if ($d)
+		return $d;
+	$groups = igk_cgt_get_group();
+	$tab = array();
+	foreach($groups  as $k=>$v){
+		$tab[$v->name] = $v;
+	}
+	igk_cgt_set_env($key, $tab);
+	return $tab;
+}
+
+
+///<summary>get offer list display</summary>
+///use in plugin configuration page tot display offers name
+function igk_cgt_get_offers_display($n){
+	// if (!isset($n->offers))
+		// return null;
+	$f = IGK_CGT_CACHEDIR."/offers_listdisplay.php";
+	$od=array();
+	if (file_exists($f)){
+		include($f);
+	}
+	
+	if (isset($od[$n->name]))
+	{
+		return $od[$n->name];
+	}
+	$r = null;
+	
+	if (isset($n->key) && !empty($n->key))
+	{
+		//------------------------------------
+		//detect key from query result;
+		//TODO: DECTECT key from result;
+		//------------------------------------
+		//$sendQuery
+		//igk_ilog("detect : ".$n->key);
+		$tb = igk_cgt_detect_criteria_offer_types($n->key);
+		$r = array_keys($tb);
+		$n->offers = implode(",",$r);
+		
+		//clear filter
+		
+		igk_cgt_clear_filters(0);		
+		igk_cgt_store_configs();
+		
+	}else{	
+		if (isset($n->offers))
+			$r = explode(",", $n->offers);		
+	}
+	if(igk_count($r)==0)
+		return null;
+	
+	$tab = array();
+	$srv = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS, 1);
+	foreach($r as $k=>$v){
+		$t = $srv->getTypeInfo($v);
+		$s = igk_cgt_read_content_obj($t, "thesaurus/spec/label" ,1,0,0);
+		if ($s && (count($s->objects)==1))		
+			$tab[] = $s->objects[0]->value;
+	}
+	$o = implode(", ", $tab);
+	$od[$n->name]=$o;
+	$str = "";
+	foreach($od as $k=>$v){
+		$str.="\$od['{$k}'] = \"{$v}\";\n";
+	}
+	@unlink($f);
+	igk_io_w2file($f, "<?php\n".$str."?>");
+	
+	return $o;
+}
+
+function igk_cgt_get_offer_name($id){
+	$srv = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS, 1);
+	$t = $srv->getTypeInfo($id);
+	$s = igk_cgt_read_content_obj($t, "thesaurus/spec/label" ,1,0,0);
+	if ($s && (count($s->objects)==1))		
+			return $s->objects[0]->value;
+	return $id;
+}
+
+function igk_cgt_clear_filters($autosave=1){
+	$cnf = igk_cgt_configs();
+	$cnf->{"filters"} = null;
+	if ($autosave)
+		igk_cgt_store_configs();
+}
+
+///<summary>get filter display list</summary>
+function igk_cgt_get_offers_filter_display($n){	
+
+	if (!isset($n->offers))
+		return null;
+	
+	$bn = igk_cgt_get_conf("filters/[group={$n->name}]", null, 1);	
+	return $bn==null? null: (is_array($bn) ? igk_count($bn) : 1);	
+}
+
+function igk_cgt_filter_data($groupname, $offerid=null){
+// igk_debug(1);	
+	$bn = igk_cgt_get_conf("filters/[group={$groupname}]", null, 1);
+	if ($bn==null)
+		return null;
+	
+	//get js filter options
+	$s = "";
+	$mv = array();
+	$fc = function(& $mv, $offer){
+		 $tab= array();
+		 //get items
+		 foreach($offer as $n=>$v){
+			 if (!is_object($v) || !isset($v->item))
+				 continue;
+			 
+			 
+			 if (is_array($v->item)){
+				 foreach($v->item as $r_k=>$r_v){
+					$tab[$n][$r_v->urn] = $r_v->value;	 
+				 }
+			 }
+			 else{
+				 $tab[$n][$v->item->urn] = $v->item->value;
+			 }
+			 
+		 }		 
+		 $mv[$offer->offer] = $tab;
+	};
+	if (is_array($bn)){
+		foreach($bn as $offer){
+			$fc($mv, $offer);		
+		}
+	}
+	else{
+		$fc($mv, $bn);
+	}
+	return $mv;
+}
+///<summary>convert to json data filtering selection.in json</summary>
+function igk_cgt_js_filter_data($groupname, $offerid=null){
+
+$mv  = igk_cgt_filter_data($groupname, $offerid);
+
+//igk_ilog($mv);
+//transform to  json object  in order to be used by cgt object data
+// return "{\"urn:fld:langpar\":{value:\"urn:fld:langpar:de|urn:fld:langpar:en|urn:fld:langpar:fr|urn:fld:langpar:it|urn:fld:langpar:nl\", type:\"multichoice\", \"offer\":11}}";
+$convert = function ($mv){
+	$r = array();
+	foreach($mv as $k=>$v){
+		$offer = $k;
+		foreach($v as $s=>$t){
+			$type = $s;
+			
+			foreach($t as $m=>$n){
+				$r[$m] = (object)array(
+					"value"=>$n,
+					"type"=>$type,
+					"offer"=>$offer
+				);
+			}
+		}		
+	}
+	return igk_json_encode($r);
+};
+
+$f =null;
+if ($offerid==null){
+	if (is_array($mv)){
+		$f = $convert($mv);		
+	}
+	else{
+		igk_die("not implement");
+	}
+}else{
+	$d = igk_getv($mv, $offerid);	
+	$f = $convert(array($offerid=>$d));
+	// igk_ilog("id found ");
+	// igk_ilog($d);
+}
+// igk_wln($f);
+// igk_exit();
+return $f;
+}
+
+
+
+///<summary>get groups </summary>
+function igk_cgt_get_group(){
+	$c = igk_cgt_get_conf("offers/group");
+	$t =array();
+	if ($c){
+		if (is_array($c)){	
+			//multiple entries for group
+			//foreach($c as $k=>$v){
+			$t = array_merge($t, $c);			
+		}else{ //single group
+			$t[] = $c;
+		}
+	}
+	//update to table name list
+	$ttab = array();
+	foreach($t as $k){
+		$ttab[$k->name] = $k;
+	}
+	return $ttab;
+}
+
+function igk_cgt_init_setting($obj, $path){
+	$cnf = igk_cgt_configs();
+	
+	$p = igk_cgt_get_conf($path, null);
+	if ($p==null)
+		$p = $obj;
+	
+	igk_conf_set($cnf, $p, $path);
+	
+	//igk_cgt_store_configs($cnf);
+}
+
+
+function igk_cgt_get_groupname(){
+	// igk_wcode(igk_cgt_env_keys());
+	return igk_cgt_get_env(IGK_CGT_GROUPNAME, "hebergement");
+	
+}
+
+function igk_cgt_get_picto_size($n){
+	$o = igk_createObj();
+	
+	$tab = igk_cgt_get_env(IGK_CGT_PICTOSIZE, array());
+	if(isset($tab[$n])){		
+		list($x, $y) = explode(';',$tab[$n]);
+		$o->x = $x;
+		$o->y = $y;
+	}else{	
+		$o->x = 16;
+		$o->y = 16;
+	}
+	return $o;
+}
+
+function igk_cgt_reg_pictosize($n, $v){	
+	$tab = igk_cgt_get_env(IGK_CGT_PICTOSIZE, array());
+	$tab[$n] = $v;	
+	igk_cgt_set_env(IGK_CGT_PICTOSIZE, $tab);
+}
+
+///<summary>get lang display</summary>
+function igk_cgt_get_urn_display($type, $n){
+	
+	// $n = 'urn:fld:accessi:perave';
+	
+	$srv = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS) ?? igk_die("no thesaurus");
+	$lang = igk_cgt_current_lang();	
+	$g = $srv->getUrnInfo($type, $n);	
+	$k = "cgt://urndisplay/{$type}/{$n}";	
+	$b = $srv->toObject($g);	
+	$path = "spec/label/[lang={$lang}]/value";	
+	$r = igk_conf_get($b, $path, $n, 0); 
+	return $r;
+}
+
+//plugins execution.
+
+//register picto size for image
+for($i=1;$i<=5;$i++){
+	igk_cgt_reg_pictosize("urn:val:class:{$i}star", (16*$i).";16");
+	igk_cgt_reg_pictosize("urn:val:class:{$i}starsup", (16*$i).";24");
+};
+
+
+
+
+///for testing init object 
+igk_cgt_init_setting((object)array(
+"groups"=>array(
+	(object)array(
+	"name"=>"hebergement"
+	),
+	(object)array(
+	"name"=>"loisir"
+	),
+	(object)array(
+	"name"=>"restauration"
+	)
+)
+), "offers");
+
+
+function igk_get_setting_services(){
+	$key = "cgt://configuration/services";
+	return igk_cgt_get_env($key, array());
+}
+function igk_get_setting_service($n){
+	$key = "cgt://configuration/services";
+	$g = igk_cgt_get_env($key);
+	
+	if($g)
+		return igk_getv($g, $n);
+	return $g;
+}
+function igk_cgt_get_setting_view($n, $t){
+	
+	$g = igk_get_setting_service($n);	
+	if ($g==null){
+		$t->addDiv()->Content = "No service <b>{$n}</b> to configure or Not implement";
+	}
+	else{
+		$g->configure($t);
+	}	
+}
+
+function igk_cgt_prepare_cookie_data(){
+	$d = igk_getv($_COOKIE,'cgtdata');
+	if ($d==null){
+		return array();
+	}
+	$d = (array)igk_json_parse(base64_decode($d));		
+	return $d;
+	
+}
+function igk_cgt_set_cookie($n, $v){
+	$d = igk_cgt_get_env("cgt://cookie") ?? igk_cgt_prepare_cookie_data();
+	
+	
+	// igk_wln("data ");
+	
+		
+	$d[$n]=$v;	
+	// igk_wln($d);
+	$o = base64_encode(igk_json_encode($d));
+	// igk_wln($o);
+	// igk_wln(igk_json_parse(base64_decode($o)));
+	// igk_exit();
+	//update cookie info
+	igk_set_global_cookie('cgtdata', $o);
+	igk_cgt_set_env("cgt://cookie", $d);	
+}
+//<summary>get cookie value</summary>
+function igk_cgt_get_cookie($n){
+	$c = igk_cgt_get_env("cgt://cookie") ?? igk_cgt_prepare_cookie_data();	
+	return igk_getv($c, $n);
+	
+}
+
+///<summary>register configuration service</summary>
+function igk_cgt_reg_setting_service($n, $callable){
+	
+	$key = "cgt://configuration/services";
+	$g = igk_cgt_get_env($key, array());	
+	$g[$n]=$callable;
+	igk_cgt_set_env($key, $g);
+}
+
+function igk_cgt_get_settingcookie(){
+	$g = igk_cgt_get_env("cgt://cookie") ;
+	if ($g)
+		return $g;
+	$g = igk_get_cookie("cgt-setting");
+	if ($g){
+		$g = igk_json_parse(stripslashes ($g));
+	}	
+	igk_cgt_set_env("cgt://cookie",$g);
+	return $g;
+}
+
+//get styles directory 
+function igk_cgt_styles_dir(){
+	return IGK_CGT_INSTALLDIR."/R/Styles";
+}
+
+function igk_cgt_data_dir(){
+	return IGK_CGT_INSTALLDIR."/Data";
+}
+function igk_cgt_cache_dir(){
+	return IGK_CGT_INSTALLDIR."/Cache";
+}
+function igk_cgt_identifer($n){
+	$n = preg_replace("/([^a-z0-9_\.])/i","_", str_replace("/", ".", $n));
+	return $n;
+}
+function igk_cgt_widget_name($n){
+	return "cgt_widget_".igk_cgt_identifer(strtolower($n));
+}
+function igk_cgt_is_action_function($n, & $callback=null){
+	$action = igk_cgt_get_env("cgt://actions");
+	if (isset($action[$n])){
+		$callback = $action[$n];
+		return 1;
+	}
+	$n = "igk_cgt_action_".$n;
+	if (function_exists($n)){
+		$callback = $n;
+		return 1;
+	}
+	return 0;
+}
+function igk_cgt_ilog($msg, $tag=null){
+	if (defined("IGK_FRAMEWORK")){
+		igk_ilog($msg, $tag);
+	}else{
+		igk_cgt_die("no log");
+	}
+}
+
+function igk_cgt_handle_action($action, $host=null){
+	$callabck = null;
+	$p = explode("/", $action);
+	$n = igk_getv($p,0);
+	if (class_exists($n) && method_exists($n, "handle")){
+		$c = $n();
+		call_user_func_array(array($c, "handle"), array_slice($p, 1));
+	}
+	else if (igk_cgt_is_action_function($n, $callback)){
+		call_user_func_array($callback , array_slice($p, 1));	
+	}
+	else{
+		igk_cgt_ilog("/!\\ action [{$action}] not implement");
+	}	
+	return 1;	
+}
+
+///<summary>get lang keys</summary>
+function igk_cgt_lang($lang, $store=0){
+	$tab = igk_cgt_get_env("cgt://lang/fr");
+	if ($tab == null){
+		$c = igk_cgt_data_dir()."/Lang";
+			//load lang keys
+		$tab["title.general"]="General";
+		$tab["msg.noresult"]="0 resultat .";
+		
+		igk_cgt_set_env("cgt://lang/fr", $tab);	
+		
+		if ($store){
+			//store lang file
+			$o = "";
+			foreach($tab as $k=>$v){
+				$o .="{$k}={$v}\n";
+			}
+			igk_io_save_file_as_utf8_wbom($c."/fr.lang", gzencode($o,3));
+		}
+	}				
+	return 	igk_getv($tab, $lang,$lang);
+}
+//---------------------------------------------------------------------------------------
+//environment management
+//---------------------------------------------------------------------------------------
+///<summary>get environment variable value</summary>
+function igk_cgt_get_env($n, $default=null, $store=0){
+	global $CGT;	
+	if (isset($CGT[$n]))
+		return $CGT[$n];
+	if (is_callable($default)){
+		$r = $default();
+		if ($r && $store){
+			$CGT[$n]=$r;
+		}
+		return $r;
+	}
+	return $default;
+} 
+
+///<summary>get environment keys</summary>
+function igk_cgt_env_keys(){	
+	global $CGT; 
+	return array_keys($CGT);
+}
+///<summary>set environment variable</summary>
+function igk_cgt_set_env($n, $v){
+	global $CGT;
+	if ($v===null){
+		unset($CGT[$n]);
+		return;
+	}	
+	$CGT[$n]=  $v;
+	return $v;
+}
+
+function igk_cgt_configs(){
+	$m = igk_cgt_get_env("cgt://configs");
+	if($m===null){
+		$f = igk_io_dir(igk_cgt_data_dir()."/data.xml");
+		if(file_exists($f)){
+			$m = igk_conf_load_file($f,"cgt") ?? igk_die("can't load the config setting");			
+			igk_cgt_set_env("cgt://configs", $m);
+		}
+	}	
+	return $m;	
+}
+
+
+function igk_cgt_array_prepend_key($s, $tab){
+	$tabs = array();
+	if(is_array($tab)){
+		foreach($tab as $k=>$v){
+			$tabs[$s.$k] = $v;
+		}
+	}
+	$tab = $tabs;
+	return $tabs;
+	
+}
+///<summary>get the primary default lang</summary>
+function igk_cgt_get_lang(){
+	return igk_cgt_get_conf("general/lang", "fr");
+}
+
+///<summary> get system configartion pattern</summary>
+function igk_cgt_get_conf($n, $default=null, $strict=0){
+	$m = igk_cgt_configs();	
+	if ($m){
+		return igk_conf_get($m, $n, $default, $strict);
+	}
+	return null;
+	
+}
+
+function igk_cgt_set_conf(& $obj, $data, $path){
+	igk_conf_set($obj, $data, $path);
+}
+function igk_cgt_store_configs($c=null){
+	
+	// igk_ilog("call store");
+	// igk_ilog(igk_show_trace());
+	// igk_die("callstrore");
+	$c = $c ?? igk_cgt_configs();	
+	igk_io_store_conf(igk_cgt_data_dir()."/data.xml", $c, "cgt");
+}
+
+///<summary>did cgt script</summary>
+function igk_cgt_die($msg){
+	throw new Exception($msg);
+}
+function igk_cgt_reg_region($n){
+	$tab = igk_cgt_get_region();
+	$tab[$n]=1;	
+	igk_cgt_set_env("cgt://region",$tab);
+}
+function igk_cgt_get_region(){
+	return igk_cgt_get_env("cgt://region", array());
+}
+
+function igk_cgt_get_base_uri(){	
+	// return "https://pivotwebsb.tourismewallonie.be/PivotWeb-3.1"; //require WS_KEYS 
+	
+	$uri = igk_cgt_get_env("cgt://baseuri", 
+		igk_cgt_get_conf("general/baseuri",	"https://pivotwebsb.tourismewallonie.be/PivotWeb-3.1-testcms")
+	);
+	return $uri;
+}
+
+function igk_cgt_createUriQuery($type, $operator="", $options="", $method="POST"){
+	if (!empty($options))
+		$options = ";".$options;
+	if (!empty($operator))
+		$operator="/".$operator;
+	return (object)array(
+	"uri"=>igk_cgt_get_base_uri()."/".igk_cgt_get_type($type)."{$operator}{$options}",
+	"type"=>$type,
+	"args"=>array(),
+	"method"=>$method
+	);	
+}
+
+function igk_cgt_get_last_query(){
+	return igk_cgt_get_env("cgt://last_query/");
+}
+function igk_cgt_send_request($queryObject, & $error=null){
+	$data = array();
+	$options = array();
+	$args = array();
+	if (isset($queryObject->ws_key)){
+		$data[] = "WS_KEY:{$queryObject->ws_key}";
+	}
+	if (isset($queryObject->headers) && is_array($queryObject->headers)){
+		$data = array_merge($data,$queryObject->headers);
+	
+	}
+	if (igk_getv($queryObject, "zip")==1){
+		$data[] ="Accept-Encoding: gzip";
+	}
+	
+	if (igk_getv($queryObject, "post")==1){
+		$options["POST"]=1;
+	}
+	if (isset($queryObject->postfields)){
+		$options["POSTFIELDS"]=$queryObject->postfields;
+	}
+	igk_cgt_set_env("cgt://last_query/", $queryObject->uri);
+	$h =  igk_curl_post_uri($queryObject->uri,null, $options, $data);	
+	
+	$tab =array();
+	if (preg_match_all("/^\s*\[(?P<code>([^\]]+))\](?P<msg>(.)*)$/i", $h, $tab)>0){
+		$error = (object)array(
+		"code"=>$tab["code"][0],
+		"msg"=>$tab["msg"][0],
+		"uri"=>$queryObject->uri		
+		);
+		
+		if (defined('IGK_CGT_DEBUG')){
+			igk_ilog("Error :".igk_cgt_get_last_query());
+			igk_ilog($error);
+		}
+		return null;
+	}	
+	return $h;
+	
+}
+
+function igk_cgt_get_type($n){
+	$ck = "cgt://services/types";
+	$b = igk_cgt_get_env($ck);
+	return isset($b[$n]) ? $b [$n] : igk_cgt_die("type {$n} not found");
+}
+
+///<summary>register service type query</summary>
+function igk_cgt_reg_types($tab){
+	igk_cgt_reg_env_array("cgt://services/types", $tab);
+}
+function igk_cgt_reg_env_array($ck, $tab){
+	$b = igk_cgt_get_env($ck, array());	
+	foreach($tab as $k=>$v){
+		$b[$v]=$v;
+	}
+	igk_cgt_set_env($ck, $b);
+}
+
+
+igk_cgt_reg_types(array(
+IGK_CGT_SRV_THESAURUS,
+IGK_CGT_SRV_QUERY
+));
+
+igk_cgt_reg_env_array("cgt://acceptformat",array(
+	"xml"=>"application/xml",
+	"json"=>"application/json",
+	"html"=>"text/html"
+));
+
+
+function igk_ctg_get_typeof($index){
+	$q = igk_cgt_createUriQuery(IGK_CGT_SRV_THESAURUS, "typeofr/{$index}", "fmt=xml;pretty=true");	
+	return igk_cgt_send_request($q);	
+}
+
+
+
+//widget function  
+function igk_cgt_register_widget($classname){
+	if (!class_exists($classname) || !is_subclass_of($classname, "WP_Widget"))
+		return 0;
+	$ms = "cgt://widgets";
+	$ck = "cgt://init_widget";
+	igk_cgt_reg_env_array($ms, array($classname=>$classname));
+	
+	if (!igk_cgt_get_env($ck)){
+		
+		add_action(IGKWP_ACTIONS::WIDGETS_INIT, function() use ($ms){
+			$tab = igk_cgt_get_env($ms);
+			foreach($tab as $k){
+				register_widget($k);
+			}
+		});
+		igk_cgt_set_env($ck, 1);
+	}
+}
+
+
+function igk_cgt_query_types(){
+	$fc = igk_getv(get_defined_functions(), "user");
+
+	$p = array();
+	$tab = array();
+	foreach($fc as $k){
+		if (preg_match_all("/^igk_cgt_(?P<dd>([^_])+)_query$/i", $k, $tab)){
+			$p[$tab["dd"][0]] = $k;
+		}
+	}
+		// igk_wln($p);
+	return $p;
+}
+
+function igk_cgt_q_to_object($xmlResult, $tag, $callback=null){
+	
+	$t = igk_conf_load_content($xmlResult, $tag);
+	
+	return $t;
+}
+
+
+
+
+
+///<summary>invoke a method on object that have et gettype value</summary>
+///<exemple>used with service</summary>
+function igk_cgt_to_object($o, $m){
+	$s = call_user_func_array(array($o,$m), array());
+	if ($s){
+		return igk_conf_load_content($s, $o->getType());
+	}
+	return null;
+}
+///<summary>registerer class class file on  dir</summary>
+function igk_cgt_reg_classes($dir, $namespace=null){
+	
+	$tab =igk_cgt_get_env(IGK_CGT_CLASSES,  array());
+	
+	igk_wp_registerLib($dir, "\.class$", function($f,$d)use(& $tab, $namespace){
+		$n = igk_cgt_identifer(igk_io_basenamewithoutext($f));	
+		$fn = $n;
+		if ($namespace){
+			$fn = $namespace."\\".dirname(substr($f, strlen($d)+1))."\\".$n;
+		}
+		if (class_exists($fn, false)){			
+			$tab[$fn] = $f;
+		}
+	}, $namespace);
+	igk_cgt_set_env(IGK_CGT_CLASSES,$tab);
+	return $tab;
+}
+
+function igk_cgt_get_service($n, $die=0){
+	$b = "\\".IGK_CGT_NS."\\Services\\".$n."_service";
+	if (class_exists($b))
+		return new $b();
+	if ($die)
+		igk_cgt_die("service {$n} not found");
+	return null;
+}
+
+function igk_cgt_q_is_valid_format($t){
+	$m = igk_cgt_get_env("cgt://validoutputformat");
+	return isset($m[$t]);
+}
+
+function igk_cgt_q_regformats($tab){
+	$m = igk_cgt_get_env("cgt://validoutputformat", array());
+	foreach($tab as $k){
+		$m[$k] = $k;
+	}
+	igk_cgt_set_env("cgt://validoutputformat", $m);
+}
+
+
+function igk_cgt_q_regoperator($tab){
+	$m = igk_cgt_get_env(IGK_CGT_VALID_OP_KEY, array());
+	foreach($tab as $k){
+		$m[$k] = $k;
+	}
+	igk_cgt_set_env(IGK_CGT_VALID_OP_KEY, $m);
+}
+
+
+//init system settings
+igk_cgt_q_regformats(array("xml","json", "html", "kml"));
+//register valid operator
+igk_cgt_q_regoperator(array("exist", "dontexists", "equal", "notequal", "lik", "notlike", "lesser",
+"lesserequal", "greater", "greaterequal", "in","between"));
+
+function igk_cgt_request_uri(){
+	return igk_getv(explode("?", igk_getv($_SERVER, "REQUEST_URI")), 0);
+}
+
+
+///---------------------------------------------------------------------------------------------------
+///global action command
+///---------------------------------------------------------------------------------------------------
+function igk_cgt_action_view_class(){
+	$tab = igk_cgt_get_env(IGK_CGT_CLASSES);
+	if (igk_count($tab)==0){
+		igk_ajx_notify_dialog("NoItem", "No classes registrated");
+	}else{
+		$ul  = igk_createNode("ul");
+		foreach($tab as $k=>$v){		
+			$ul->add("li")->Content = $k;
+		}
+		
+		// $manager = new Core\Pivot\manager();
+		// $ul->addLi()->Content = $manager->getVersion();
+		
+		$r = igk_cgt_get_service("releases");
+		$g = $r->sendQuery();
+		// igk_wln("<textarea>".$g."</textarea>");
+		
+		$ul->add("li")->Content = "Current Release ";
+		
+		$g = igk_cgt_to_object($r, "getCurrentRelease");
+		
+		$out = igk_createNode("div");
+		$out->addDiv()->Content = "CodeName : ".igk_conf_get($g->release, "codename");
+		// $out->addDiv()->Content = igk_html_view(igk_conf_get($g->release, "version"),"div", "span");
+		$out->addDiv()->Content = "Version :". implode(".", (array)igk_conf_get($g->release, "version"));//,"div", "span");
+		$out->addDiv()->Content = "Copyright : ".igk_conf_get($g->release, "copyright");
+		
+		
+		$ul->add("li")->add($out);//ObData(igk_cgt_to_object($r, "getCurrentRelease"));
+		
+		$ul->RenderAJX();
+		
+		
+	}
+	igk_exit();
+}
+
+
+///---------------------------------------------------------------------------------------------------
+///utility
+///---------------------------------------------------------------------------------------------------
+///<summary>build query request command</summary>
+function igk_cgt_build_query_request($args = null, $criteriaQuery=null, $operator=null){
+	
+	//igk_die("b");
+	$T = "\\".IGK_CGT_NS."\\constants";
+	$g = igk_createXmlNode($T::QueryTag);
+	$g["xmlns"] = $T::DEFAULTXSD; //"http://pivot.tourismewallonie.be/files/xsd/pivot/3.1";
+	$g["xmlns:xsi"] = $T::DEFAULTXSD; //"http://pivot.tourismewallonie.be/files/xsd/pivot/3.1";
+	$g["xsi:schemaLocation"] = $T::SCHEMA_LOCATION; //"http://pivot.tourismewallonie.be/files/xsd/pivot/3.1";
+	
+	$criteria = null;
+	if ($criteriaQuery){
+		$criteria = $g->addXmlNode($T::CriteriaGroup);
+		$criteria["operator"] = $operator ??  $T::CriteriaDefaultOperator;//set default perator criteria
+					
+		$query = $criteria->addXmlNode($T::CriteriaQuery);
+		$query->add("value")->Content = $criteriaQuery;					
+	}
+	
+	//build args
+	if (is_array($args)){		
+		foreach($args as $k=>$v){			
+			if ($criteria === null){
+				$criteria = $g->addXmlNode($T::CriteriaGroup);
+				$criteria["operator"] = $T::CriteriaDefaultOperator;//set default perator criteria
+			}
+			
+			$m = $criteria->add($T::CriteriaField);
+			$m["field"]= preg_match("/^urn:/i", $k)? $k : "urn:fld:".$k;
+			$m["operator"]= is_array($v) ? igk_getv($v, "operator", "equal") :"equal";
+			$m["target"]= "value";			
+			
+			$gv = igk_getv($v, "value");
+			if (is_array($gv)){	
+				foreach($gv as $km){
+					$m->add("value")->Content = $km;
+				}
+			}else{
+				$m->add("value")->Content = is_array($v)? igk_getv($v, "value", "null") : $v;
+			}
+			
+			if (igk_count($c = igk_getv($v, "extra"))>0){//addin extra data				
+				foreach($c as $d){
+					$m->add("value")->Content = $d;
+				}				
+			}
+		}		
+	}
+	return $g;
+}
+///</summary>check if the operator is a valid one</summary>
+function igk_cgt_q_is_valid_op($op){
+	$p = igk_cgt_get_env(IGK_CGT_VALID_OP_KEY);
+	return isset($p[$op]);
+	
+}
+function igk_cgt_q_in($v){
+	return array("operator"=>"in", "value"=>$v);
+}
+function igk_cgt_q_op($op, $v){
+	igk_cgt_q_is_valid_op($op) || igk_cgt_die("/!\\ <b>$op</b> not a valid query operator.", IGK_CGT_E_201);
+	return array("operator"=>$op, "value"=>$v, "extra"=>array_slice(func_get_args(),2));
+}
+
+///<summary>get data type structure. thesaurus</summary>
+function igk_cgt_action_get_type($service, $args){
+	// igk_wln("result");
+	// igk_wln($service);
+	// igk_wln($args);
+	
+	$b = igk_cgt_get_service($service);
+	if ($b){
+		$args = implode("/", array_slice(func_get_args(), 1));
+		//igk_wln("type : ".$b->getType());
+		$h = $b->sendQuery($args, $error);
+		if ($h){
+			$th = igk_cgt_q_to_object($h, $service);
+			$b->viewList($th);
+		}
+	}		
+	igk_exit();
+}
+
+function igk_cgt_bind_offer_view($v, $row, $extra=null, $context=null){
+	if (!file_exists($v))
+		$v = dirname(__FILE__)."/View/offers/{$v}";
+	if (!file_exists($v))
+		return;
+	if ($context==null){
+		unset($context);
+	if ($extra)
+		extract($extra);
+	include($v);
+	}else{ // because php 7.1 only declare Closure::fromCallable method. the work around
+		$fc  = function($row)use($v, $extra){
+			if ($extra)
+				extract($extra);
+			include($v);		
+		};
+		$fc = $fc->bindTo($context);
+		$fc($row);
+	}
+}
+///<summary>used to query service action</summary>
+function igk_cgt_action_query($service, $fc){
+	$b = igk_cgt_get_service($service) ?? igk_cgt_die("{$service} service not found");	
+	$q = call_user_func_array(array($b, $fc), array_slice(func_get_args(),2));	
+	
+	$dir = igk_cgt_cache_dir();
+	
+	IGKIO::CreateDir($dir."/{$service}/");
+	// exit;
+	
+	$c = $b->toObject($q);
+	$off = igk_getr("off");
+	if ($c){
+		if ($off){
+			$g = function()use($b, $c){			
+				$b->viewList($c);
+			};
+			igk_cgt_set_env("cgt://offdata", $g);
+			
+		}else {
+			$b->viewList($c);	
+		}
+	}
+	if (!$off)
+	igk_exit();
+}
+
+
+function igk_cgt_action_srv_invoke($service, $fc){
+	$b = igk_cgt_get_service($service);
+	if ($b){
+		$q = call_user_func_array(array($b, $fc), array_slice(func_get_args(),2));
+		igk_wl("<div>");
+		$b->view($q, function($i){			
+			$dv = igk_createNode("div");
+			$dv->setContent(igk_conf_get($i, "label/[lang=fr]/value"))->RenderAJX();
+			
+			$dv = igk_createNode("div");
+			$dv->setContent(igk_conf_get($i, "urn"))->RenderAJX();
+		});
+		igk_wl("</div>");
+		
+	}
+	igk_exit();
+}
+
+
+function igk_cgt_read_file_obj($file, $path, $buffersize=4096){
+	$inf = (object)[];
+	$inf->path = $path;
+	$inf->max = 10; //integer > 0 or true for read all
+	$inf->min = 0; //minumun object to read
+	$inf->offset=0;//position in file
+	$inf->bufferSize=$buffersize;		
+	igk_xml_read_stream($file, "igk_xml_xpath_object_callback", $inf);
+	return $inf;
+}
+function igk_cgt_read_content_obj($content, $path, $max=0, $min=0, $offset=0){
+	$inf = (object)[];
+	$inf->path = $path;//"offres/offre";
+	$inf->max = $max; //integer > 0 or true for read all
+	$inf->min = $min; //minumun object to read
+	$inf->offset=$offset;//position in file
+	$inf->bufferSize=4096 * 4 *4;		
+
+	igk_xml_read_content($content, "igk_xml_xpath_object_callback", $inf);
+	return $inf;
+}
+
+
+//--------------------------------------------------------------------------------------------------------
+//init theme
+//--------------------------------------------------------------------------------------------------------
+function igk_cgt_init_theme_setup(){
+register_sidebar(array(
+"name"=>"Cgt-Search zone",
+"id"=>"cgt_search_zone",
+"description"=>"register search zone box"
+));
+
+register_sidebar(array(
+"name"=>"Cgt-Resume zone",
+"id"=>"cgt_resume_zone",
+"description"=>"Resume list zone"
+));
+
+
+register_sidebar(array(
+"name"=>"Cgt-Details Zone",
+"id"=>"cgt_details_zone",
+"description"=>"Details view zone"
+));
+
+
+}
+add_action("after_setup_theme", "igk_cgt_init_theme_setup");
+
+
+///<summary>encapsulation. invoke wordpress sidebar</summary>
+function igk_cgt_invoke_sidebar($id){
+	dynamic_sidebar($id);
+}
+
+//--------------------------------------------------------------------------------------------------------
+// cgt html utility function 
+//--------------------------------------------------------------------------------------------------------
+function igk_cgt_html_filter($tab, $u=null){
+	$d = igk_createNode("div");
+	$i=0;
+	foreach($tab as $l=>$v){
+		if ($i)
+			$d->addText(',');
+		$d->addA($u."#")->Content = $v;
+		$i=1;
+	}
+	return $d->Render();
+}
+
+///<summary>uri management</summary>
+function igk_cgt_base_uri(){
+	return igk_io_global_uri() ?? igk_io_baseUri();
+}
+function igk_cgt_action_uri($uri){
+	$buri = igk_getv(explode("?", igk_io_request_uri()), 0);
+	return $buri."?cgt-actions=".$uri;
+}
+
+
+///<summary>retrouver les valeur présente dans une</summary>
+function igk_cgt_get_offers_from_key($key, $filter, $path=null, $value=null){
+	$query = igk_cgt_get_service(IGK_CGT_SRV_QUERY,1);	
+	$query->setPagined(0);
+	$query->setContent(1);		
+	$s = igk_cgt_build_query_request($filter, $key);
+	$error = array();
+	$xml = $query->sendQuery($s, $error);
+	
+	
+	if (!$xml)
+		return null;
+	
+	// igk_io_w2file("d:\\temp\\restaurationtest.xml", $xml);
+	
+	$n = igk_createXsltNode();
+	$n["xmlns:cgt"]= IGK_CGT_PIVOT_NS;	
+	$n->add("xsl:output")->setAttributes(array(
+	"omit-xml-declaration"=>"yes",
+	"intent"=>"yes",
+	"method"=>"text"
+	));
+	
+	$path = $path ?? "cgt:offres/cgt:offre/cgt:typeOffre";
+	$value = $value ?? "current()/@idTypeOffre";
+	
+	$t = $n->add('xsl:template')->setAttribute("match", "/");	
+	$dv = $t->add('div');	
+	$each = $dv->add("xsl:for-each")->setAttribute("select", $path);		
+	$u = igk_createNode("NoTagNode");
+	$u->Content =<<<EOF
+<xsl:if test="position() > 1">,</xsl:if>
+<xsl:value-of  select="{$value}"></xsl:value-of>
+EOF;
+	
+	$each->add($u);
+	$xslt = $n->Render();
+	$s = igk_xslt_transform($xml, $xslt);	
+	//igk_wln($s);
+	
+	$to = array();
+	foreach(explode(",", $s) as $k){
+		if (empty($k))continue;
+		$to[$k]=$k;
+	}
+	return $to;
+}
+
+function igk_cgt_get_spec($d){
+	$tab = array();
+	if (isset($d->urn))
+		$tab[$d->urn]= $d->urn;
+
+	$qt = array($d);
+	$fc = function(& $tab, $qs){
+			if (isset($tab[$qs->urn])){
+					$b = $tab[$qs->urn];
+					if (!is_array($b))
+						$b = array($b);
+					$b[] = $qs;
+					$tab[$qs->urn] = $b;
+					
+				}else
+					$tab[$qs->urn] = $qs;
+	};
+
+	while($qs = array_pop($qt)){
+		if (isset($qs->spec))
+		{
+			if (!is_array($qs->spec)){
+				$urn = igk_conf_get($qs->spec, "urn");
+				if ($urn){
+					$tab[$urn]=$urn;
+					
+				}else
+					igk_wln("not array ". igk_conf_get($qs->spec, "urn"));
+			}else{
+				foreach($qs->spec as $k){
+					if (isset($k->urn)){
+						//$tab[$k->urn] = $k->urn;
+						$fc($tab, $k);
+					}
+					//array_push($qt,$k);
+				}
+			}
+		}else{
+			if (isset($qs->urn)){
+				$fc($tab, $qs);
+			}
+		}
+	}		
+	return $tab;
+}
+
+function igk_cgt_append_block($dv, $v, $class="", $blo="div"){
+	if (empty($v))
+		return;
+	
+	$r = $dv->add($blo);
+	$r["class"]=$class;
+	$r->Content = $v;
+}
+///<summary>get matricial parameter</summary>
+function igk_cgt_mat_param($d){
+	if (!$d)
+		return null;
+	$s ="";
+	foreach($d as $k=>$v){
+		if(empty($v))continue;
+		$s.=";{$k}={$v}";
+	}
+	return $s;
+}
+
+///<summary>By the spec defined return a node that represent the data</summary>
+function igk_cgt_get_view_spec($type, $spec ){
+	if (empty($spec))
+		return null;
+	$v = igk_getv($spec,"value");
+	if (empty($v))
+		return null;
+	$picinfo = igk_cgt_get_conf("pictograme/[type={$type}]", array(
+	"c"=>"FF0000",
+	"h"=>16,
+	"w"=>"",
+	"modifier"=>"ori"
+	));
+	
+	$dmat = igk_cgt_mat_param($picinfo);
+	
+	switch(strtolower($spec->type))
+	{
+		case 'url':
+		return igk_createNode('a')->setAttribute("href", $v)->setContent($v);
+		break;
+		case 'choice':
+		
+		
+		$g = igk_cgt_get_service("img")->getImage($spec->value.$dmat);
+		if ($g){
+			return igk_createXmlNode("img")->setAttribute("src", igk_html_inlinedata("image/png", $g));
+		}
+		
+		$d = igk_cgt_get_env("query://thesaurus/{$type}/{$spec->value}", function()use($type, $spec){
+			$g = igk_cgt_get_service(IGK_CGT_SRV_THESAURUS);
+			$d = $g->getUrnInfo($type, $spec->value);
+			$d = $g->toObject($d);		
+			return $d;
+		},1);
+		
+		return igk_createNode("obData", null, array(function()use($d){ igk_wl(igk_conf_get($d, "spec/label/[lang=".igk_cgt_get_lang()."]/value")); } ));
+		break;
+	}
+	return $v;
+}
+
+
+
+?>

@@ -1,0 +1,13 @@
+<?php
+abstract class AdminService{
+	abstract function getName();
+	public function update(){
+		//override this to update the service
+		
+	}
+	public function getUpdateUri(){
+		$name = $this->getName();
+		return igk_io_baseUri().igk_io_query_request_uri(). "?cgt-actions=update_service&service={$name}";
+	}
+}
+?>

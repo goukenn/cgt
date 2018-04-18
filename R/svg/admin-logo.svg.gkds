@@ -1,0 +1,19 @@
+﻿<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <FileName>D:\wamp\www\igkdev\Mods\wordpresshost\Data\R\svg\admin-logo.svg.gkds</FileName>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_59199654" FillBrush="#FFFF" BackgroundTransparent="True" Width="20" Height="20">
+      <Layer Id="Layer_14842990">
+        <Path Closed="True" FillBrush="#FFF9F9F9" StrokeBrush="transparent" Id="Path_30800315">
+          <PointTypes>0;3;3;3;3;3;3;3;3;3;1;3;3;3;3;3;3;3;3;131;0;1;1;129</PointTypes>
+          <Points>5.098601;12.94968 2.619426;10.36272 2.706808;6.255798 5.293775;3.776625 7.880739;1.29745 11.98766;1.384832 14.46683;3.971797 16.90879;6.519934 16.8659;10.55269 14.37028;13.04831 11.3653;10.04333 12.1177;9.147907 12.1177;7.773572 11.3653;6.878153 10.51441;5.865526 9.051018;5.865526 8.20013;6.878155 7.459483;7.759584 7.446408;9.108128 8.169798;10.00645 1.000001;15.09657 18.56543;15.09657 18.56543;19 1.000001;19</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

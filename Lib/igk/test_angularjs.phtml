@@ -1,0 +1,32 @@
+<?php
+//Test angular js demonstration
+$t->clearChilds();
+$dv = $t->addDiv();
+
+$angulardir = dirname(__FILE__."/angularjs");
+
+$t->addDiv()->Content = "Test - ANGULAR JS IN BALAFON";
+
+$p = igk_getv($params, 0);
+
+if ($p ){
+	if(file_exists($f = $angulardir."/{$p}.php")){
+		include($f);
+	}
+	else{
+		igk_http_status(404);
+		
+	}
+}else{
+
+foreach(igk_io_get_files($angulardir, "/\.php$") as $k=>$v){
+	$d = $dv->addLi();
+	$n = igk_io_basenamewithoutext($v);
+	
+	$d->addA($this->getAppUri($fname."/".$n))->Content = $n;
+}
+
+}
+
+
+?>

@@ -1,0 +1,21 @@
+<!--This is a gkds ICore file 9.6.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>22-01-2015 22:24:32</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_65153424" PixelOffset="None" Width="32" Height="32" BackgroundTransparent="True">
+      <Layer Id="Layer_40834114">
+        <Path Closed="True" StrokeBrush="Type:Solid;Colors:#0000;DashStyle:Solid;LineJoin:Round" ShadowProperty="Offset:2 2;IsClipped:False;ShadowBrush:[Type:Solid;Colors:#F000;]" AllowShadow="True" Id="Path_61626890">
+          <PointTypes>0;1;1;1;1;1;1;1;1;1;1;129</PointTypes>
+          <Points>4.5;13.5 13.5;13.5 13.5;3.5 18.5;3.5 18.5;13.5 27.5;13.5 27.5;18.5 18.5;18.5 18.5;28.5 13.5;28.5 13.5;18.5 4.5;18.5</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

@@ -1,0 +1,88 @@
+﻿<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <FileName>D:\wamp\www\igkdev\Lib\igk\Default\R\Fonts\global.font.gkds</FileName>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_3241882" FillBrush="#FFFF" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Rectangle Bounds="0;0;100;100" FillBrush="#FFFF" StrokeBrush="#F000" Id="Rectangle_17337058" />
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="back" FillBrush="#FFFF" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_16814086">
+          <PointTypes>0;1;1;1;1;1</PointTypes>
+          <Points>40;100 20;100 -1;50 20;0 40;0 20;50</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="back_2" FillBrush="#FFFF" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_31289453">
+          <PointTypes>0;1;1;1;1;129;0;1;1;1;1;129</PointTypes>
+          <Points>40;100 20;100 -1;50 20;0 40;0 20;50 64;50 84;0 64;0 43;50 64;100 84;100</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="play" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_46037613">
+          <PointTypes>0;1;1</PointTypes>
+          <Points>0;100 100;51 0;0</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="pause" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_28896832">
+          <PointTypes>0;1;1;129;0;1;1;129</PointTypes>
+          <Points>0;0 35;0 35;100 0;100 65;0 100;0 100;100 65;100</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="fullscreen" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_3657284">
+          <PointTypes>0;1;1;1;1;1;1;1;129;0;1;1;1;1;1;1;1;129;0;1;1;1;1;1;1;1;129;0;1;1;1;1;1;1;1;129</PointTypes>
+          <Points>0;28 6;28 6;11 32;39 36;34 10;6 28;6 28;0 0;0 100;28 94;28 94;11 66;39 62;34 90;6 72;6 72;0 100;0 100;72 94;72 94;89 66;66 62;71 90;94 72;94 72;100 100;100 0;72 6;72 6;89 32;66 35;71 10;94 28;94 28;100 0;100</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="volume" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_65517235">
+          <PointTypes>0;1;1;129;0;1;1;129</PointTypes>
+          <Points>0;30 20;30 20;70 0;70 34;30 72;-1 72;100 34;69</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="capture" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_65149413">
+          <PointTypes>0;1;129;0;1;1;1;1;1;129</PointTypes>
+          <Points>0;60 40;100 0;100 0;16 20;0 39;22 82;22 82;67 100;85 80;101</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="fullscreenmode" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_40072990">
+          <PointTypes>0;1;1;129;1;1;1;1</PointTypes>
+          <Points>0;84 100;84 100;16 0;16 20;32 80;32 80;68 20;68</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+    <LayerDocument Id="mute" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_9019890">
+        <Quadratic Closed="True" FillMode="Winding" FillBrush="#FFFF" StrokeBrush="#F000" Id="Quadratic_2730033">
+          <PointTypes>0;1;1;1;1;1;1;1;1;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129</PointTypes>
+          <Points>81.93813;40.35787 89.67894;48.09867 97.41974;40.35787 100;42.93813 92.25921;50.67894 100;58.41974 97.41974;61.00001 89.67894;53.2592 81.93813;61.00001 79.35786;58.41974 87.09867;50.67894 79.35786;42.93813 34;30 72;-1 72;100 34;69 41;61 64;79 64;17 41;35 0;30 20;30 20;70 0;70</Points>
+        </Quadratic>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

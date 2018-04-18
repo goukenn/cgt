@@ -1,0 +1,7 @@
+﻿<?php
+$lang[""]="";
+$lang["Name"]="Nom";
+$lang["Filters"]="Filtres";
+$lang["Offers"]="Offres";
+$lang["CriteriaKey"]="Clef de critères";
+?>

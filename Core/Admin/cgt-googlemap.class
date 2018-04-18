@@ -1,0 +1,163 @@
+<?php
+
+
+class cgt_googleMapService extends __base_ns\AdminService {
+	const SERVICE_NAME="googlemap";
+	public function getName(){
+		return cgt_googleMapService::SERVICE_NAME;
+	}
+	///<summary>get file schemaq</summay>
+	public function getFileSchema($n='schema.json'){
+		if (empty($n))
+			$n='schema.json';
+		return igk_io_dir(IGK_CGT_INSTALLDIR."/Data/google/{$n}");
+	}
+	public function __construct(){
+	}
+	
+	public function getApiKey(){
+		$g = igk_cgt_get_conf('googlemap/apikey') ?? 
+			(function_exists('igk_google_apikey')? igk_google_apikey() : null);
+		return $g;
+	}
+	public function configure($t){
+		$t->setId("gmservice");		
+		igk_html_title($t->addDiv(), "Googlemaps service");		
+		$t->addNotifyHost();
+		$frm = $t->addForm();		
+		$apikey = $this->getApiKey();
+	
+		$row = $frm->addRow();
+		$dv = $row->addCol("igk-col-4-2")->addDiv();
+		$ul = $dv->add('ul');
+		igk_html_buildform($ul, array(
+		"clApiKey"=>array("require"=>1, "attribs"=>array(
+		"value"=>$apikey
+		))
+		)
+		);	
+		// $uri = igk_io_baseUri()."/wp-admin?cgt-actions=update_service&service=googlemap&fc=uploadjson_style";	
+		// $uri = igk_io_baseUri()."/wp-admin?cgt-actions=update_service&service=googlemap&fc=uploadjson_style";	
+		$uri = "?cgt-actions=update_service&service=googlemap&cgt-googlemap=1";	
+		$frm["action"] = $uri;
+		
+		$d = $dv->addDiv();
+		// $d->setContent($uri);
+		
+		// $d->addDiv()->setContent(igk_getv($_SERVER, 'SERVER_PORT'));
+		// $d->addDiv()->setContent(igk_getv($_SERVER, 'SERVER_PORT', $secured ? 443 : 80));
+		
+		$d = $dv->addDiv();
+		$d->addDiv()->Content = "MapStyles";
+		// $d->addAJXPickfile(igk_io_baseUri()."/default/uploadfile", '{accept:".json"}');
+		$uf = igk_io_baseUri()."/wp-admin/?cgt-actions=update_service&service=googlemap&fc=uploadjson_style";
+		// $d->addDiv()->Content = "UF : ".$uf;
+		$d->addAJXPickfile($uf, '{accept:".json"}');
+		
+		$d->addAJXButton(igk_io_baseUri()."?cgt-actions=update_service&service=googlemap&fc=dropjson_style")
+		->setClass("igk-svg-btn")
+		->setStyle("width:32px; height:32px")->Content = igk_svg_use("drop");
+		
+		
+		$s = igk_cgt_get_conf('googlemap');
+		$bck = $_REQUEST;
+		$_REQUEST = (array)$s;	
+
+		
+		$d = $dv->addDiv();
+		$d->addDiv()->Content = "Default Marker Size";
+		igk_html_buildform($d->add('ul'), array(
+		"markerWidth"=>array("attribs"=>array("validate"=>"uint")),
+		"markerHeight"=>array("attribs"=>array("validate"=>"uint"))
+		));
+		
+		$_REQUEST = $bck;
+		
+		
+		if ($apikey)
+		{
+			$dv = $row->addCol("igk-col-4-2")->addDiv();
+			$styler = "";
+			$f  = $this->getFileSchema();
+			if (file_exists($f)){
+				$styler = ', styles:'.igk_io_read_allfile($f);
+			}
+			
+			// $dv->addDiv()->Content = "test view map";
+			$p = igk_js_minify("{zoom:15,center:{lat:50.850402, lng:4.357879} {$styler}}");
+			
+			//
+			$dv->addGoogleJSMaps($p, $apikey)->setStyle("height:300px");
+		}
+		
+		$frm->addDiv()->addObData("submit_button");
+	}
+
+	private function replaceView(){
+			$t = igk_createNode("div");
+			$this->configure($t);
+			igk_ajx_replace_node($t, "#gmservice");
+	}
+	
+	
+	public function update($app){	
+	
+	// igk_wln("update ...".igk_io_request_uri());
+	// igk_exit();
+		$fc = igk_getr("fc");
+		if (!empty($fc) && method_exists("action_".$fc)){
+			call_user_func_array(array($this, "action_".$fc),array());
+		}else{
+			
+		
+				switch($fc){
+					case "dropjson_style":					
+						//igk_wln("dropjs style");
+						$f = $this->getFileSchema();
+						if (file_exists($f)){
+							unlink($f);
+							igk_ajx_toast("default googlemap style's file remove");
+							$this->replaceView();
+					
+						}			
+						igk_exit();			
+					break;
+					case "uploadjson_style":
+						$s = igk_io_store_ajx_uploaded_data(dirname($this->getFileSchema()) , "schema.json");
+						if ($s){
+							igk_ajx_toast(":-) file uploaded");
+							$this->replaceView();
+						}
+						igk_exit();			
+					break;
+					default:
+						$k = igk_getr("clApiKey");
+						$c = $c ?? igk_cgt_configs();	
+						$g = igk_cgt_get_conf('googlemap/apikey');	
+						$cw = igk_getr("markerWidth", 16);
+						$ch = igk_getr("markerHeight", 16);
+						igk_cgt_set_conf($c,  (object)array(
+						"apikey"=>$k,
+						"markerWidth"=>$cw,
+						"markerHeight"=>$ch
+						),
+						'googlemap');						
+						igk_cgt_store_configs($c);
+						return 1;
+					break;
+				}
+		
+		}
+	}
+	
+	
+}
+
+
+//
+//register setting service
+//
+
+igk_cgt_reg_setting_service(cgt_googleMapService::SERVICE_NAME, new cgt_googleMapService());
+
+?>

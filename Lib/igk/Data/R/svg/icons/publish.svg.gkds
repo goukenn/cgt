@@ -1,0 +1,21 @@
+﻿<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>04-01-2018 23:50:57</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_39495842" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_52060033">
+        <Path FillBrush="#F000" StrokeBrush="transparent" Id="Path_31999888">
+          <PointTypes>0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;129;0;1;1;1;1;1;1</PointTypes>
+          <Points>4;7 95;7 95;28 4;28 4;28 11;28 11;77 4;77 88;28 95;28 95;78 88;78 61;69 88;69 88;78 61;78 21;58 37;34 56;58 43;58 44;97 34;97 33;58</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>
