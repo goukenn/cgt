@@ -1,6 +1,0 @@
-<div class="igk-col igk-col-view-box">
-
-<div><b>[func: $ctrl->getServiceViewTitle($row)]</b></div>
-<div class="desc">[func: $ctrl->getDesc($row)]</div>
-<div>[func:$ctrl->getExtra($row)]</div>
-</div>
