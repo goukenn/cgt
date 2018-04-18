@@ -1,3 +1,0 @@
-<?php
-//igk_reg_path_exec("py", igk_getv(igk_app()->Configs, "python_run_script"));//,igk_get_configs()igk_app()->Configs "d:\\python35-32\\python.exe");
-?>

@@ -1,9 +1,0 @@
-<?php
-// igk_wln($c);
-// igk_wln(IGK_SITEMAP_FUNC);
-if (preg_match("/^".IGK_SITEMAP_FUNC."(\.xml)?$/", $c)){
-	igk_sys_gen_sitemap($this, igk_getv($p, 0, $this->getAppUri()));//igk_io_domain_uri_name()));			
-	igk_exit();
-}
-// igk_exit();
-?>

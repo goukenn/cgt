@@ -1,7 +1,0 @@
-<div class="msg">
-{$row->clMessage->getValue()}
-</div>
-<div class="actions">
-<input igk:id="yes" value="[lang:btn.yes]" type="submit" class="igk-btn" />
-<input igk:id="no" value="[lang:btn.no]" type="submit" class="igk-btn" onclick="javascript: ns_igk.winui.notify.close(); return false;" />
-</div>

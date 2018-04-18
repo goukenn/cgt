@@ -1,4 +1,0 @@
-<?php
-foreach($this->getSystemVars() as $k=>$v)
-	$$k = & $v;
-?>

@@ -1,9 +1,0 @@
-<?php
-//load library extension
-$dir = dirname(__FILE__);
-//include mysql library
-igk_reglib_once(igk_io_dir($dir."/igk_mysql_db.phtml"));
-// include extension directory
-igk_reglib(igk_loadlib($dir."/Ext","php"));
-unset($dir);
-?>

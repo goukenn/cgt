@@ -1,5 +1,0 @@
-<resources>
-<string name="btn.ok"> OK </string>
-<string name="btn.cancel"> Annuler </string>
-<string name="msg.browsernotsupport.drop"> Cette opération n'est pas prix en charge</string>
-</resources>

@@ -1,7 +1,0 @@
-<div class="igk-col-view-box igk-service-box" >
-<a href="{$row->getServiceUri()}">
-<div class="igk-title">{$row->Configs->clServiceName}</div>
-<!--<div>[func: $row->getArticle('desc')]</div>!-->
-<div>[func: igk_view_article($row, 'desc')]</div>
-</a>
-</div>
