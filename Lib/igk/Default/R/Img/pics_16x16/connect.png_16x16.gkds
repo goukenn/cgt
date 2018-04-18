@@ -1,0 +1,24 @@
+<!--This is a gkds ICore file 9.6.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>09-11-2014 08:59:43</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument BackgroundTransparent="True" Width="16" Height="16" Id="LayerDocument_30800315">
+      <Layer Id="Layer_50363306">
+        <Circle Radius="6.403124" Center="8;8" FillBrush="Type:Solid;Colors:#F000;" Id="Circle_43304163" />
+        <Circle Radius="2.236068" Center="8;5" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_47173034" />
+      </Layer>
+      <Layer Clipped="#Circle_43304163" Id="Layer_63110655">
+        <Circle Radius="6.403124" Center="8;8" FillBrush="Type:Solid;Colors:#0000;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_43304163" />
+        <Ellipse Radius="5;6" Center="8;12" StrokeBrush="Type:Solid;Colors:#0000;" Id="Ellipse_36597234" />
+        <Circle Radius="2.236068" Center="8;5" StrokeBrush="Type:Solid;Colors:#F000;Width:0.25;DashStyle:Solid;LineJoin:Round" Id="Circle_47173034" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

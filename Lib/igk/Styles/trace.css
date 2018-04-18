@@ -1,0 +1,49 @@
+.igk-btn{
+	background-color:blue;	
+}
+
+.igk-js-notify-box{
+	position:fixed;
+	width:100%;
+	height:100%;
+	top:0px;
+	left:0px;
+}
+
+.igk-js-notify-box:before{
+	background-color:black;
+	position:absolute;
+	width:100%;
+	height:100%;
+	content:' ';
+	top:0px;
+	z-index:-1;
+	opacity:0.8;
+}
+.igk-js-notify{
+	background-color:white;
+	color:#5c5c5c;
+	position:fixed;
+	padding-left:10px;
+	padding-right:10px;
+	left:0px;
+	right:0px;
+}
+.igk-js-notify .igk-notify-btn-close{
+	position:absolute;
+	top:4px;
+	right:30px;
+	cursor:pointer;
+}
+#tracelist #hd{
+	cursor:pointer;
+	margin-bottom: auto;
+	margin-top:auto;
+}
+#tracelist{
+	height:3em;
+	padding:4px;
+}
+#tracelist.igk-active{
+	height:auto;
+}

@@ -1,0 +1,20 @@
+﻿<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>07-11-2017 18:09:19</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_46037613" FillBrush="#FFFF" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_58426669">
+        <Spline Tension="0.1" EnableTension="True" Closed="True" Points="8;32 50;50 92;32 50;21" FillBrush="#FFFF" StrokeBrush="#F000" Id="Spline_35415147" />
+        <Spline Tension="0.1" EnableTension="True" Closed="True" Points="15;51 8;54 50;70 92;55 86;51 50;63" FillBrush="#FFFF" StrokeBrush="#F000" Id="Spline_35415147" />
+        <Spline Tension="0.1" EnableTension="True" Closed="True" Points="15.16667;71.3 8.166667;74.3 50.16667;90.3 92.16666;75.3 86.16666;71.3 50.16667;83.3" FillBrush="#FFFF" StrokeBrush="#F000" Id="Spline_35415147" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

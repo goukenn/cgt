@@ -1,0 +1,24 @@
+<!--This is a gkds ICore file 9.6.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <Author>Charles A.D. BONDJE DOUE</Author>
+    <Creation>22-02-2015 17:00:43</Creation>
+    <Version>1.0</Version>
+  </Project>
+  <Documents>
+    <LayerDocument PixelOffset="None" Width="48" Height="48" Id="LayerDocument_83667">
+      <Layer Id="Layer_5773084">
+        <RoundRect BottomRight="3;3" BottomLeft="3;3" TopRight="3;3" TopLeft="3;3" Bounds="10;4;24;9" FillBrush="Type:Solid;Colors:#FF2878FF;" StrokeBrush="Type:Solid;Colors:#FF848270;" Matrix="1,0,0,0,0,1,0,0,0,0,1,0,2,0,0,1" Id="RoundRect_52695674" />
+        <Group Matrix="0.7777778,0,0,0,0,0.7777778,0,0,0,0,1,0,6.111111,10.66667,0,1" Id="Group_10624597">
+          <RoundRect BottomRight="3;3" BottomLeft="3;3" TopRight="3;3" TopLeft="3;3" Bounds="2;26;14;9" FillBrush="Type:Solid;Colors:#FF2878FF;" StrokeBrush="Type:Solid;Colors:#FF848270;" Matrix="1,0,0,0,0,1,0,0,0,0,1,0,-4,-5,0,1" Id="RoundRect_52695674" />
+          <RoundRect BottomRight="3;3" BottomLeft="3;3" TopRight="3;3" TopLeft="3;3" Bounds="2;26;14;9" FillBrush="Type:Solid;Colors:#FF2878FF;" StrokeBrush="Type:Solid;Colors:#FF848270;" Matrix="1,0,0,0,0,1,0,0,0,0,1,0,14,-5,0,1" Id="RoundRect_52695674" />
+          <RoundRect BottomRight="3;3" BottomLeft="3;3" TopRight="3;3" TopLeft="3;3" Bounds="2;26;14;9" FillBrush="Type:Solid;Colors:#FF2878FF;" StrokeBrush="Type:Solid;Colors:#FF848270;" Matrix="1,0,0,0,0,1,0,0,0,0,1,0,32,-5,0,1" Id="RoundRect_52695674" />
+        </Group>
+        <CustomPolygon Tension="0" EnableTension="False" Closed="False" FillMode="Alternate" Points="11;23 11;19 23;19 23;15 25;15 25;19 37;19 37;23 35;23 35;21 25;21 25;23 23;23 23;21 13;21 13;23" FillBrush="Type:Solid;Colors:#FF781EF6;" StrokeBrush="Type:Solid;Colors:#28000000;" Id="CustomPolygon_50686111" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

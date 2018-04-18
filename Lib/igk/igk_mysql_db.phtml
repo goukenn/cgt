@@ -1,0 +1,1297 @@
+<?php
+
+if (!extension_loaded("mysql") && (!extension_loaded("mysqli")))
+{
+	echo "no extension mysql or mysqli installed. class will not be installed in that case.". extension_loaded("mysqli");
+	igk_wln(get_loaded_extensions());
+	return;
+}
+
+
+if (!function_exists("mysqli_connect")){
+	igk_wln("function not exists mysqli_connect");
+	igk_exit();
+}
+	
+define("IGK_MSQL_DB_Adapter", 1);
+define("IGK_MSQL_DB_AdapterFunc", extension_loaded("mysql"));
+define("IGK_MSQLi_DB_AdapterFunc", extension_loaded("mysqli"));
+
+
+if (IGK_MSQLi_DB_AdapterFunc)
+{
+	define("IGK_MYSQL_USAGE", "MySQLi");
+}
+else 
+	define("IGK_MYSQL_USAGE", "MySQL");
+	
+define("IGK_MYSQL_DATETIME_FORMAT", "Y-m-d H:i:s");
+define("IGK_MYSQL_TIME_FORMAT", "Y-m-d H:i:s");
+define("IGK_MYSQL_DATE_FORMAT", "Y-m-d");
+
+///<summary>db manager interface</summary>
+// interface IIGKdbManager
+// {
+	// function connect();
+	// function dropTable($tableName);
+	// function close($leaveopen=false);
+// }
+
+
+final class IGKMySQLTimeManager extends IGKObject{
+	var $ad;
+	public function __construct($ad){
+		$this->ad = $ad;
+	}
+	public function Now(){
+		return date($this->ad->getFormat("datetime"));
+	}
+}
+abstract class IGKMySQLDataAdapterBase extends IGKSQLDataAdapter{
+	protected $m_dbManager;
+	private $m_controller;
+	private $m_dbname; //db in adapter base
+	private $m_error;
+	private $m_errormsg;
+	private $m_time;
+	private static $sm_emptyResult;
+	public function CreateEmptyResult($result=false){		
+		return IGKMySQLQueryResult::CreateResult($result);
+	}
+	public function getTime(){
+		// if (!$this->m_time){
+			$this->m_time = new IGKMySQLTimeManager($this);
+		
+		// }
+			
+		return $this->m_time;
+	}
+	
+	public function setForeignKeyCheck($d){
+		if (is_integer($d))
+		$this->sendQuery("SET foreign_key_checks=".igk_db_escape_string($d).";");
+	}
+	
+
+	public function getFormat($type){
+		switch(strtolower($type)){
+			case 'time':
+				return IGK_MYSQL_TIME_FORMAT;
+			case 'datetime':
+				return IGK_MYSQL_DATETIME_FORMAT;
+			case 'date':
+				return IGK_MYSQL_DATE_FORMAT;
+		}
+		return "";
+	}
+	public function getLastQuery(){
+		return $this->m_dbManager->getLastQuery(); 
+	}
+	protected function setLastQuery($v){
+		throw new Exception("not implement ".__FUNCTION__);		
+	}
+	public function listTables(){
+		return $this->sendQuery("SHOW TABLES;");
+	}
+	public function initForInitDb(){
+		if ($this->m_dbManager)
+		$this->m_dbManager->initForInitDb();
+	
+		//parent::initForInitDb();
+	}
+	public function flushForInitDb(){
+		if ($this->m_dbManager)
+		$this->m_dbManager->flushForInitDb();		
+	}
+	public function OpenCount(){
+		if ($this->m_dbManager)
+		return $this->m_dbManager->OpenCount();
+		return 0;
+	}
+	public function closeAll(){
+		if ($this->m_dbManager){
+			$this->m_dbManager->closeAll();
+		}
+		$this->m_dbname = null;
+	}
+	//get the requested opened dbname
+	public function getDbName(){
+		return $this->m_dbname;
+	}
+	public function getError(){
+		return $this->m_error;
+	}
+	
+	
+	public function getAllRelations(){
+		return IGKMySQLDataCtrl::GetAllRelations($this, $this->m_dbname);
+	}
+	public function dropAllRelations(){
+		return IGKMySQLDataCtrl::DropAllRelations($this, $this->m_dbname);
+	}
+	
+	public function beginTransaction(){
+		//$this->sendQuery("BEGIN");
+		//$this->sendQuery("SET autocommit=0");
+		$this->sendQuery("START TRANSACTION");
+	}
+	public function rollback(){
+		$this->sendQuery("ROLLBACK");
+	}
+	public function commit(){
+		$this->sendQuery("COMMIT");		
+	}
+	public function getTabInitInfo(){
+		return $this->m_dbManager->getTabInitInfo();
+	}
+	public function connectTo($dbserver, $dbname, $dbuser, $dbpwd){
+		return $this->m_dbManager->connectTo($dbserver, $dbname, $dbuser, $dbpwd);
+	}
+	public function IsStoredTable($tbN)
+	{
+		$g =  $this->getStored();
+		return isset($g[$tbN]);
+	}
+		
+	public function getStored(){
+		return  $this->m_dbManager ?$this->m_dbManager->getStored() : null;
+	}
+	public function getStoredRequired(){
+		return  $this->m_dbManager ?$this->m_dbManager->getStoredRequired() : null;
+	}
+	public function initSystableRequired($tablename){
+		return $this->m_dbManager &&  $this->m_dbManager->initSystableRequired($tablename);
+	}
+	public function initSystablePushInitItem($tablename , $callback){
+		return $this->m_dbManager &&  $this->m_dbManager->initSystablePushInitItem($tablename , $callback);
+	}
+	public function getLastId(){return $this->m_dbManager->lastId();}
+	public function getIsAvailable(){ return ($this->m_dbManager !=null); }
+	public function getIsConnect(){return $this->m_dbManager->getIsConnect(); }
+	public function getResId(){return IGKSQLManager::GetResId();}
+	
+	public function GetUpdateQuery($tbname, $values, $condition = null, $tableInfo=null){
+		return IGKSQLQueryUtils::GetUpdateQuery($tbname, $values, $condition, $tableInfo);
+	}
+	public function dropTable($tbname){
+		if ($this->m_dbManager!=null)
+			return IGKMySQLDataCtrl::DropTable($this, $tbname, $this->DbName);
+		return null;		
+	}
+	public function getConstraint_Index($s){
+		if ($this->m_dbManager!=null)
+			return IGKMySQLDataCtrl::GetConstraint_Index($this, $s, $this->DbName);
+		return null;	
+	}
+	
+	public function __construct($ctrl=null)
+	{
+		$this->m_controller = $ctrl;
+		$this->m_dbManager = $this->__createManager();
+		if ($this->m_dbManager == null)
+		{
+			if (defined('IGK_DEBUG'))
+			{
+				throw new Exception("/!\\ Manager not created." );
+			}
+			else {
+				igk_ilog(__METHOD__."::".__LINE__, "/!\\ Failed to create database manager.");				
+			}
+			igk_die("failed to create MySQL database manager. msqli or mysql not present. please install it");
+			
+		}else{
+			$this->m_dbManager->setCloseCallback(array($this,'closeCallback'));
+			$this->m_dbManager->setOpenCallback(array($this,'openCallback'));
+		}
+	}
+	public function closeCallback(){
+		$this->m_dbname = null;
+	}
+	public function openCallback(){
+		igk_log_write_i(__CLASS__, "open connection");
+	}
+	protected function __createManager(){
+		//override this to create the manager
+	}
+	public function configure($array)
+	{
+		$this->m_dbManager->configure($array);
+	}
+	public function connect($dbnamemix=null, $selectdb=true){//connect from adapter base	
+		
+		$this->makeCurrent();	
+		if (($this->m_dbManager==null) ||(!$this->m_dbManager->connect())){
+			igk_ilog($this->m_dbManager?"can't connect with dbmanager: ".get_class($this->m_dbManager) : "m_dbManager is null");
+			return false;
+		}
+		$dbs = igk_get_env("sys://Db/NODBSELECT");
+		$dbname = null;
+		if (is_string($dbnamemix))
+			$dbname = $dbnamemix;
+		if (!$dbs && $selectdb){	
+				$dbname = $dbname==null? $this->app->Configs->db_name: $dbname;
+				if (!$this->selectdb($dbname)){
+					$this->close();
+					return false;
+				}
+				$this->m_dbname = $dbname;
+		}
+		return true;
+	}
+	public function selectdb($dbname){		
+			
+		if (($this->m_dbManager!=null) && !empty($dbname))
+		{
+			$r =  $this->m_dbManager->selectdb($dbname);	
+			if ($r){
+				$this->m_dbname = $dbname;
+			}else{
+				igk_log_write_i(basename(__FILE__), "can't select db \"$dbname\". db not found or error.");
+				//igk_die('db not found');
+			}
+			return $r;
+		}	
+		return false;
+	}
+	public function selectLastId()
+	{
+		if ($this->m_dbManager!=null)
+		return $this->m_dbManager->selectLastId();
+	}
+	public function close($leaveOpen=false){		
+		if ($this->m_dbManager!=null){
+			
+			$this->m_dbManager->close($leaveOpen);
+			if ($this->m_dbManager->OpenCount()<=0){
+				$this->m_dbname = null;				
+			}		
+		}
+	}
+	//update query
+	public function update($tbname, $entries = null, $where=null, $querytabinfo=null)
+	{	
+		if (($entries == null) || ($this->m_dbManager==null))
+		{
+			return false;
+		}
+		return $this->m_dbManager->update($tbname, $entries, $where, $querytabinfo);
+	}
+	
+	public function getUpateQuery($tablename, $entry, $where=null){
+		return IGKSQLQueryUtils::GetUdpateQuery($tablename, $entry, $where);
+	}	
+	
+	public function countAndWhere($tbname, $whereTab){
+		$o = "";
+		$s = 0;
+		$q = "SELECT Count(*) FROM `".igk_mysql_db_tbname($tbname)."`";
+		if (is_array($whereTab) && igk_count($whereTab) > 0)
+		{
+			$q .= " WHERE ".IGKSQLQueryUtils::GetCondString($whereTab);		
+		}else{
+			if (is_string($whereTab))
+			{
+				$q .= " WHERE ".$whereTab.";";
+			}
+		}
+		return $this->sendQuery($q);
+
+	}
+
+	public function delete($tablename, $entry)
+	{	
+		if ($this->m_dbManager!=null){
+			return $this->m_dbManager->delete($tablename, $entry);
+		}
+	}
+	public function deleteAll($tablename)
+	{
+		if ($this->m_dbManager!=null)
+		return $this->m_dbManager->deleteAll($tablename);
+	}
+	
+	public function Reset(){
+		if ($this->m_dbManager!=null)
+			$this->m_dbManager->closeAll();
+		$this->m_dbManager = $this->__createManager() ?? igk_die("failed to recreate db connection");	
+		
+		// igk_wln($_REQUEST);
+		// igk_wln(get_class($this->m_dbManager));
+		// igk_exit();
+		
+		
+	}
+	
+	// public function getNoLoadedEntry(){
+		// $this->m_dbManager->getNoLoadedEntry();
+	// }
+}
+
+class IGKNoDbConnection{
+	function connect(){
+		return false;
+	}
+	function close(){
+		
+	}
+	function OpenCount(){
+		return -1;
+	}
+	function setCloseCallback(){
+		
+	}
+	function setOpenCallback(){
+		
+	}
+	function initForInitDb(){
+		//do nothing
+	}
+	function closeAll(){
+		
+	}
+	function insert(){
+		return false;
+	}
+}
+
+
+class IGKMySQLDataAdapter extends IGKMySQLDataAdapterBase
+{
+	public function getDbIdentifier(){
+		return "mysqli";
+	}
+	public function __construct($ctrl=null)
+	{
+		parent::__construct($ctrl);
+	}
+	protected function __createManager()
+	{	
+		if(class_exists(IGKSQLManager::class))
+		{
+			$this->makeCurrent();
+			$cnf = $this->app->Configs;
+			$s =  IGKSQLManager::Create($cnf->db_server, 
+			$cnf->db_user, 
+			$cnf->db_pwd);
+			
+			if ($s == null)
+			{
+				//********** SHOR ERROR
+				ob_start();	
+				igk_wln("CreateManager Error");
+				igk_wln("Error : ". igk_mysql_db_error());
+				igk_wln("server : ".$cnf->db_server);
+				igk_wln("user : ".$cnf->db_user);
+				igk_wln("pwd : :-)");
+				$v = ob_get_contents();
+				ob_end_clean();
+				// igk_ilog($v);
+				igk_set_env("sys://db/error", $v);
+				$s = new IGKNoDbConnection();				
+				
+			}else{
+				$s->setAdapter($this);
+			}		
+			return $s;
+		}
+		return null;
+	}
+
+	public function tableExists($tablename){
+		return $this->m_dbManager->tableExists($tablename);		
+	}
+	public function createTable($tablename, $columninfoArray, $entries=null, $desc=null)
+	{
+		if ($tablename=="tbigk_mailinglists"){
+			igk_wln(igk_show_trace());
+			igk_exit();
+		}
+		
+		if ($this->m_dbManager != null)		
+		{
+			if (!empty($tablename) && !$this->tableExists($tablename))
+			{
+				//igk_wln("db manager ".get_class($this->m_dbManager));
+				$s = $this->m_dbManager->createTable($tablename, $columninfoArray, $entries, $desc, $this->DbName);					
+				return $s;
+			}
+		}
+		return false;
+	}
+	///<summary>create table links definition </summary>
+	///return true if this table still have link an register ctrl data
+	public function haveNoLinks($tablename,$ctrl=null){
+		return $this->m_dbManager->haveNoLinks($tablename, $ctrl);
+	}
+	public function createdb($dbname){
+		if ($this->m_dbManager != null)
+			return $this->m_dbManager->createDb($dbname);
+		return false;
+	}
+	public function insert($tablename, $entry, $tableinfo=null)
+	{		
+
+		if ($this->m_dbManager != null)
+		{
+			$v = $this->m_dbManager->insert($tablename, $entry, $tableinfo);		
+			return $v;
+		}
+		return null;
+	}
+	
+	public function getInsertQuery($tablename, $entry)
+	{
+		return IGKSQLQueryUtils::GetInsertQuery($tablename, $entry);
+	}
+	// public function select($tablename, $where=null, $operand='AND')
+	// {
+		// if ($this->m_dbManager != null)
+			// return IGKMySQLQueryResult::CreateResult($this->m_dbManager->select($tablename, $where, $operand));
+		// return null;
+	// }
+	public function sendQuery($query, $throwex=true, $options=null)
+	{		
+	igk_debug_wln("sending query ".$query);
+		if ($this->m_dbManager != null)
+		{	
+			return IGKMySQLQueryResult::CreateResult($this->m_dbManager->sendQuery($query, $throwex), $query, $options);
+		}
+		return null;
+	}
+	public function selectAll($tbname)
+	{
+		$q = "SELECT * FROM `".igk_mysql_db_tbname($tbname)."` ";		
+		return $this->sendQuery($q);
+	}
+	public function __toString(){
+		return __CLASS__;
+	}
+	public function clearTable($tbname){
+		$tbname = igk_mysql_db_tbname($tbname);
+		$this->sendQuery("TRUNCATE `".$tbname."` ;");
+		$this->sendQuery("ALTER TABLE `".$tbname."` AUTO_INCREMENT =1;");
+	}
+	public function die_error(){
+		return igk_mysql_db_error();
+	}
+	public function getError(){//IGKMySQLDataAdapter get last error
+		return $this->m_dbManager->getError();
+	}
+	public function getHasError(){
+		return $this->m_dbManager->getHasError();
+	}
+	public function getErrorCode(){
+		return $this->m_dbManager->getErrorCode();
+	}
+}
+
+
+//load entity data relation
+class IGKMySQLDataCtrl extends IGKControllerBase{
+	private $m_dictionary;
+	
+	public function getDataTableName(){return null;}
+	public function getDataTableInfo(){return null;}
+	public function initDataEntry($dbman, $tbname=null){}
+	public function getDataAdapterName(){ 	return IGK_MYSQL_DATAADAPTER; }
+	public function getIsVisible(){return false;}
+	public function __construct()
+	{
+		parent::__construct();
+	}
+	
+	
+	public function InitComplete()
+	{
+		$this->m_dictionary = array();
+		//load all data relationship
+		
+		$info =null;
+		$v_name = null;
+		$v_info = null;
+		
+		$this->m_dictionary = igk_db_get_table_def($this->DataAdpaterName);
+		
+	}
+	public function getInfo($tbname)
+	{
+		return igk_getv($this->m_dictionary, $tbname);
+	}
+	public function getEntries($tbname){
+		$v = $this->getInfo($tbname);
+		return ($v == null)? null: $v->Entries;
+	}
+	
+	
+	///<summary>drop table</summary>
+	///<param name="tbname">mixed single table name or array of table name</param>
+	public static function DropTable($adapter, $tbname, $dbname, $node=null){
+		// igk_wln("drop table ....".$dbname);
+		// igk_wln($tbname);
+		// exit;
+		if (is_array($tbname))
+		{
+			$tablelist = array();
+			//clear relation for table	
+			$deleted = array();			
+			foreach($tbname as $k=>$v){
+				$i = $v;
+				$tablelist[$i]=1;
+				$deleted = array();						
+				self::DropTableRelation($adapter, $i, $dbname, $tablelist, $deleted, $node);
+				
+				// if (igk_count($deleted)>0)
+					// igk_wln($deleted);
+				
+			}			
+			$adapter->selectdb($dbname);
+			$r = true;
+			foreach($tablelist as $tbname=>$k)
+			{
+				if (!$adapter->sendQuery("Drop Table IF EXISTS `".igk_db_escape_string($tbname)."` ")->Success )
+				{					
+					if ($node)
+						$node->addNotifyBox("danger")->Content = "Table ".$tbname ." not deleted ".igk_mysql_db_error();
+					$r = false;
+				}
+			}	
+			igk_notification_push_event(IGK_NOTIFICATION_DB_TABLEDROPPED, $adapter, $tbname);
+			return true;			
+		}
+		else{
+			$delete = null;
+			//igk_wln("drop relation ...".$tbname);
+			self::DropTableRelation($adapter, $tbname, $dbname,null,$delete, $node);
+			if (!$adapter->sendQuery("Drop Table IF EXISTS `".igk_db_escape_string($tbname)."` ")->Success)
+			{			
+				igk_notifyctrl()->addErrorr("Table ".$tbname ." not deleted ".igk_mysql_db_error());
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	public static function GetConstraint_Index($a, $b, $tbase){
+		$bck = $tbase;
+		$a->selectdb("information_schema");
+		$h = $a->sendQuery("SELECT * FROM `TABLE_CONSTRAINTS` WHERE `TABLE_SCHEMA`='".$tbase."'");
+		$i = 1;
+		$max = 0;
+		$ln = strlen($b);
+		foreach($h->Rows as $k=>$v){
+			if (preg_match("/^".$b."/i",$v->CONSTRAINT_NAME )){
+				$i++;
+				$max = max($max, intval(substr($v->CONSTRAINT_NAME, $ln)));
+			}
+		}		
+		$a->selectdb($bck);
+		return max($i, $max+1);
+	}
+	
+	public static function GetAllRelations($adapt, $dbname){
+		$bck = $dbname;		
+		$adapt->selectdb("information_schema");
+		$g = $adapt->sendQuery("SELECT * FROM `TABLE_CONSTRAINTS` WHERE `TABLE_SCHEMA`='".igk_db_escape_string($dbname)."'");
+		$adapt->selectdb($bck);
+		return $g;		
+	}
+	public static function DropAllRelations($adapt, $dbname){
+		$bck = $dbname;		
+		$adapt->selectdb("information_schema");
+		$g = $adapt->sendQuery("DELETE FROM `TABLE_CONSTRAINTS` WHERE `TABLE_SCHEMA`='".igk_db_escape_string($dbname)."'");
+		$adapt->selectdb($bck);
+		return $g;		
+	}
+	public static function RestoreRelations($adapt, $dbname, $e){
+		
+		$bck = $dbname;		
+		$adapt->selectdb("information_schema");
+		foreach($e->Rows as $k=>$v){
+			$query = IGKSQLQueryUtils::GetInsertQuery("TABLE_CONSTRAINTS", $v);
+			igk_wln($query);
+			//$g = $adapt->sendQuery($query);
+		}
+		$adapt->selectdb($bck);
+		return $g;		
+		
+	}
+	public static function DropTableRelation($adapter , $tbname, $dbname, $tablelist=null, & $deleted= null, $node=null){
+	
+		$d = $adapter;
+		$bck = $dbname;
+		$d->selectdb("information_schema");
+		$h = $d->sendQuery("SELECT * FROM `TABLE_CONSTRAINTS` WHERE `TABLE_NAME`='".igk_mysql_db_tbname($tbname)
+		."' AND `TABLE_SCHEMA`='".igk_db_escape_string($dbname)."'");
+		$d->selectdb($bck);
+		$r = false;
+		if ($h && $h->RowCount >0){			
+			$del = false;
+			$ns = "";
+			foreach($h->Rows as $m=>$n)
+			{
+				$ns = $n->CONSTRAINT_NAME;
+				$nt = $n->CONSTRAINT_TYPE ;
+				switch($nt){
+					case "FOREIGN KEY":
+						if (!isset($deleted[$ns]))
+						{
+						//drop foreign keys
+							$nm = igk_db_escape_string(trim($ns));							
+							$q = "ALTER TABLE `".$n->TABLE_NAME."` DROP ".$nt." `".$nm."`";											
+							if (!$d->sendQuery($q)->Success)
+							{	
+								if ($node)					
+									$node->addNotifyBox("danger")->Content = $q." ".igk_mysql_db_error();						
+							}else{
+								
+							}
+							if ($nt !== "FOREIGN KEY")
+							{	/// /!\ not realible				
+								$q = "ALTER TABLE `".$n->TABLE_NAME."` DROP INDEX `".$nm."`";
+								if (!$d->sendQuery($q)->Success)
+								{
+									if ($node)
+										$node->addNotifyBox("danger")->Content = $q." ".igk_mysql_db_error();						
+								}					
+							}
+							$deleted[$n->CONSTRAINT_NAME] = 1;
+						
+						}
+					break;
+				
+				}
+				/*if (($n->CONSTRAINT_TYPE == "FOREIGN KEY") && !isset($deleted[$ns]))
+				{							
+					//drop foreign keys
+					$nm = igk_db_escape_string(trim($ns));
+					
+					$q = "ALTER TABLE `".$n->TABLE_NAME."` DROP FOREIGN KEY `".$nm."`";											
+					if (!$d->sendQuery($q)->Success)
+					{	
+						if ($node)					
+							$node->addNotifyBox("danger")->Content = $q." ".igk_mysql_db_error();						
+					}
+					if ($n->CONSTRAINT_TYPE !== "FOREIGN KEY")
+					{	/// /!\ not realible				
+						$q = "ALTER TABLE `".$n->TABLE_NAME."` DROP INDEX `".$nm."`";
+						if (!$d->sendQuery($q)->Success)
+						{
+							if ($node)
+								$node->addNotifyBox("danger")->Content = $q." ".igk_mysql_db_error();						
+						}					
+					}
+					$deleted[$n->CONSTRAINT_NAME] = 1;
+				}
+				else {
+					//FOR UNIQUE
+					//FOR PRIMARY KEY
+					//igk_wln($n->CONSTRAINT_TYPE );
+				}*/
+			}				
+		}
+		return $r;
+	}
+	
+	///<summar>/!\ delete all table from data base. return a node of</summary>
+	public function drop_all_tables(){
+		$d = igk_get_data_adapter($this);
+		if ($d->connect())
+		{
+			$node = igk_createNode("div");
+			$r = $d->sendQuery("SHOW TABLES");			
+			$table = igk_html_build_query_result_table($r);
+			$node->add($table);
+		
+	
+			$dbname = $d->dbName;
+			
+			$tablelist = array();
+			//clear relation for table	
+			$deleted = array();			
+			foreach($r->Rows as $k=>$v){
+				$i = $r->Columns[0]->name;
+				// igk_wln($v->$i);
+				// break;
+				$tablelist[$v->$i] = 1;	
+				self::DropTableRelation($d, $v->$i, $dbname, $tablelist, $deleted);				
+			}			
+			$d->selectdb($dbname);
+			//igk_wln($tablelist);
+			$c = 0;
+			foreach($tablelist as $tbname=>$k)
+			{
+				if (!$d->sendQuery("Drop Table IF EXISTS `".igk_db_escape_string($tbname)."` ")->Success)
+				{					
+					$node->addNotifyBox("danger")->Content = "Table ".$tbname ." not deleted ".igk_mysql_db_error();
+				}
+				$c++;
+			}				
+			$d->selectdb($dbname);	
+			$d->close();
+		    return $node;
+		}
+	}
+
+}
+
+
+
+///<summary>retreive the current server date </summary>
+function igk_mysql_datetime_now(){
+	return date(IGK_MYSQL_DATETIME_FORMAT);
+}
+function igk_mysql_time_span($date){
+	return igk_time_span(IGK_MYSQL_DATETIME_FORMAT,$date);
+}
+function igk_mysql_db_tbname($tbname){	
+	return igk_db_escape_string(igk_db_get_table_name($tbname));
+}
+//get HTML Result table
+function igk_mysql_result_table($resource)
+{
+	$tab = igk_createNode("table");
+	$tab["class"] = "igk-table mysql-r";
+	//render row	
+	$tr = $tab->Add("tr");				
+	$c = igk_db_num_fields($resource);
+	for($i = 0; $i< igk_db_num_fields($resource); $i++)
+	{
+		$tr->Add("th")->Content = mysql_field_name($t, $i);
+	}				
+	foreach(mysql_fetch_assoc($resource) as $k)
+	{
+		$tr = $tab->Add("tr");	
+		if (is_array($k))
+		{
+			foreach($k as $v){
+				$tr->Add("td")->Content = $v;
+			}
+		}
+		else{
+			$tr->Add("td")->Content = $k;
+		}
+	}				
+	return $tab;
+}
+function igk_mysql_db_gettypename($t){
+	$m_mysqli_data = array(
+		1=>'boolean', 2=>'smallint',
+		3=>'int',
+		4=>'float',
+		5=>'double',
+		10=>'date', 
+		11=>'time', 
+		12=>'datetime',
+		252=>'text',
+		253=>'varchar',	
+		254=>'binary'
+		
+	);
+	if (is_numeric($t)){
+		return igk_getv($m_mysqli_data, $t);
+	}
+	return $t;
+}
+function igk_mysql_db_is_primary_key($flags){
+	return ($flags & 2) == 2;
+}
+function igk_db_escape_string($v, $r=null)
+{	
+	$g = IGKSQLManager::GetFunc("escapestring");
+	if (IGKSQLManager::IsMySQLi()){		
+		$b = IGKSQLManager::GetResId();
+		if ($b)
+			return $g($b, $v);
+		igk_die("error ".__FUNCTION__." - ResId :{$b} - for :".$v . " func is MySQLi ". $g);
+		
+	}	
+	if (!empty($g))
+		return $g($v);
+}
+
+function igk_db_connect($srv, $dbu, $pwd){
+	if (empty($srv))
+		return false;
+	
+	$g = IGKSQLManager::GetFunc("connect") ?? igk_die("not connect found for !!!! ".IGKSQLManager::$Configs["system"]);
+	
+	// igk_wln(IGKSQLManager::IsMySQLi()." ".$g . " .... > ". $g($srv, $dbu, $pwd) . "error ".mysqli_connect_error());
+	if (IGKSQLManager::IsMySQLi()){		
+		return @$g($srv, $dbu, $pwd);
+	}
+	return @$g($srv, $dbu, $pwd);
+}
+function igk_db_is_resource($r){
+	
+	if (IGKSQLManager::IsMySQLi()){
+	
+		return is_object($r);
+	}
+	return is_resource($r);
+}
+function igk_db_query($query){
+	$g = IGKSQLManager::GetFunc("query");
+	if (IGKSQLManager::IsMySQLi()){	
+		$d = IGKSQLManager::GetResId();
+		if ($d)
+			return $g($d, $query);
+		else {
+			igk_debug_wln("res id is null to send query ".$query);
+		}
+		return null;
+	}
+	return $g($query);
+}
+function igk_db_num_rows($r){
+	$g = IGKSQLManager::GetFunc("num_rows");
+	//igk_wln("v : ".$g);
+	// if (IGKSQLManager::IsMySQLi()){
+	
+		// return $g($r);//IGKSQLManager::GetResId());
+	// }
+	return $g($r);
+}
+function igk_db_num_fields($r){
+	$g = IGKSQLManager::GetFunc("num_fields");
+	
+	return $g($r);
+}
+
+function igk_db_fetch_row($r){
+	$g = IGKSQLManager::GetFunc("fetch_row");
+	
+	return $g($r);
+}
+function igk_db_fetch_field($r){
+	$g = IGKSQLManager::GetFunc("fetch_field");	
+	return $g($r);
+}
+function igk_mysql_db_close($r){	
+	$g = IGKSQLManager::GetFunc("close");
+	//suppress warning
+	return @$g($r);
+}
+function igk_mysql_db_last_id($r=null){
+	$g = IGKSQLManager::GetFunc("lastid");
+	if (IGKSQLManager::IsMySQLi()){
+		$d = IGKSQLManager::GetResId();
+		if ($d)
+		{
+			return $g($d);			
+		}
+		else{
+			// igk_wln(" d not found $d ");
+			// igk_log_write_i("dNotF", "not found ");
+			//resource close so open new 
+			// $ad = igk_get_data_adapter(IGK_MYSQL_DATAADAPTER);
+			// if ($ad->connect()){
+			
+				// $id = $ad->getlastId();
+				// igk_wln("last id ".$id);
+				// $ad->close();
+				// return $id;
+			// }
+			// igk_wln("bad");
+			
+			
+			return -1;
+		}
+	}
+	return $g($r);
+}
+function igk_mysql_db_error($r=null){
+	//igk_wln("close ...");
+	$g = IGKSQLManager::GetFunc("error");
+		if (IGKSQLManager::IsMySQLi()){
+			$d = IGKSQLManager::GetResId();
+				if ($d)
+				return $g($d);
+			return "";
+		}
+	return $g($r);
+}
+function igk_mysql_db_errorc(){
+	$g = IGKSQLManager::GetFunc("errorc");
+		if (IGKSQLManager::IsMySQLi()){
+			$d = IGKSQLManager::GetResId();
+				if ($d)
+				return $g($d);
+			return "";
+		}
+	return $g($r);
+}
+function igk_mysql_db_has_error(){
+	return igk_mysql_db_errorc() != 0;
+}
+
+function igk_mysql_db_selected_db($mysql){
+	$r = $mysql->sendQuery("SELECT DATABASE();")->getRowAtIndex(0);
+	$c = "DATABASE()";
+	return $r->$c;
+}
+//used for query result
+final class IGKMySQLQueryResult extends IGKQueryResult implements /*Iterator ,*/ IIGKQueryResult
+{
+	private $m_columns;//stored column in this query result
+	private $m_tables;// list of tables in this query result according to columns
+	private $m_rows; //primary key rows
+	private $m_rowsEntity;
+	private $m_fieldcount;
+	private $m_dbname; //db name int query result
+	private $m_irows;  //indexed rows
+	private $m_adapterName;
+	private $m_type; //result type
+	private $m_value; //get the result value
+	private $m_primarykey;//get the primary key
+	
+	private $m_query;//store the query
+	
+	//get the result type
+	public function getResultType(){return $this->m_type;}
+	//getValue type 
+	public function getValue(){return $this->m_value; }
+	
+	public function getTables(){return $this->m_tables;}
+	public function getSuccess(){
+		return ($this->ResultTypeIsBoolean() && $this->getValue()) || ($this->RowCount>0);
+	}
+	//search for equal on data base
+	///<param name="equalsTab">array for searching </param>
+	public function searchEqual($equalsTab)
+	{
+		if (!is_array($equalsTab))
+			return null;
+		$t = array();
+		foreach($this->Rows as $k=>$v)
+		{
+			$found = true;
+			foreach($equalsTab as $m=>$n)			
+			{
+				if ($v->$m != $n)
+				{
+					$found = false;
+					break;
+				}
+			}
+			if ($found)
+				$t[] = $v;
+		}
+		if (igk_count($t) == 1)
+			return $t[0];
+		if (igk_count($t) == 0)
+			return null;
+		return $t;
+	}
+	private function  __construct()
+	{
+		$this->m_columns = array();
+		$this->m_tables = array();
+		$this->m_rows = array();		
+		$this->m_rowsEntity = array();		
+		$this->m_irows = array();
+		$this->m_adapterName = "MYSQL";
+		$this->m_type = "none";
+		$this->m_result = 0; ///retult of the query  uses for boolean data
+	}
+	public function __toString(){
+		return "IGKMySQLQueryResult [RowCount: ".$this->RowCount."]";
+	}
+	
+	public function getRowAtIndex($index)
+	{
+		if (strtolower($this->m_type) == 'igk_db_query_result'){
+			return igk_getv($this->m_irows, $index);
+		}
+		return null;
+	}
+	public function getResult(){	
+		if (strtolower($this->m_type) == 'boolean'){
+			return igk_getv(igk_getv($this->m_irows, 0), 'clResult');
+		}
+		return false;
+	}
+	///<summary>create a empty result from result type</summary>
+	public static function CreateEmptyResult($result, $seacharray=null)
+	{		
+		$out = new IGKMySQLQueryResult();
+		$out->m_dbname = $result->m_dbname;
+		$out->m_fieldcount = $result->m_fieldcount;
+		$out->m_rows = array();		
+		$out->m_rowsEntity = array();
+		$out->m_query = 'Empty';
+		return $out;
+	}
+	///<summary>create a result data</summary>
+	///<param name="options">callback or igk_db_create_opt_obj()</param>
+	public static function CreateResult($dbresult, $query=null, $options=null)
+	{
+		if (is_bool($dbresult))
+		{	
+			$out = new IGKMySQLQueryResult();
+			$out->m_fieldcount = 1;			
+			$out->m_columns[] = "clResult";	
+			$t = array("clResult"=>$dbresult);
+			//$out->addRow($t);
+			$out->m_irows[]= $t;
+			$out->m_type = "boolean";			
+			$out->m_value = $dbresult;
+			$out->m_query = $query;
+			// igk_wln($options);
+			$out->setError(igk_getv($options, "error"));
+			$out->setErrorMsg(igk_getv($options, "errormsg"));		
+			return $out;
+		}		
+		if (!$dbresult)
+		{
+			igk_set_error(__METHOD__, "CreateResult - > dbresult  not Define");			
+			return null;
+		}
+		if (is_object($dbresult)){
+			$cl = strtolower(get_class($dbresult));
+			if (!preg_match("/mysql(i)?_result/",$cl)){				
+				$out = new IGKMySQLQueryResult();
+				$out->m_rowcount=1;
+				$out->m_rows[] = $dbresult;	
+				$tab = (array)$dbresult;
+				$out->m_fieldcount = igk_count($tab);
+				$out->m_type  = "igk_db_query_result";
+				$out->m_query = ":igk_build_in_query_result";
+				$i=0;
+				foreach($tab as $k=>$v){
+					$out->m_columns[$i] = (object)array("name"=>$k,"typeName"=>"php","index"=>$i);
+					$i++;
+				}
+				return $out;
+			}
+		}
+	
+		$c = igk_db_num_rows($dbresult);
+		$out = new IGKMySQLQueryResult();
+
+		$out->m_rowcount = $c;
+		$out->m_fieldcount = igk_db_num_fields($dbresult);
+		$out->m_type = "igk_db_query_result";
+		$out->m_query = $query;
+		
+		$index = 0;//add index to result
+		$prim_key = array();
+		//	$dbresult->reset();
+		while($d = igk_db_fetch_field($dbresult))
+		{
+			$d->index = $index;				
+			$d->typeName = igk_mysql_db_gettypename($d->type);
+			//$d->sourceType = $d->type;
+			// echo "primary key ";
+			// // throw new Exception("kdjf");//"// igk_wln($d);
+			// igk_log_write_i("data", array_keys((array)$d));
+			// igk_log_write_i("data", $d->flags);
+			// igk_log_write_i("data", $d->name);
+			// exit;
+			if ( (isset($d->primary_key) && $d->primary_key) || (igk_mysql_db_is_primary_key($d->flags) ) ){
+				//make it compatible with mysqli add primary_key object
+				$d->primary_key = 1;
+				$prim_key[] = (object)(array("name"=>$d->name, "index"=>$index));
+				
+			}
+			else{
+				$d->primary_key = 0;
+			}
+			$out->m_columns[$index] = $d;
+			$out->m_tables[$d->table]=$d->table;
+			$index++;
+		}
+		
+		$v_primkey = count($prim_key) == 1? $prim_key[0]->name : null;
+		$v_primkeyindex = count($prim_key) == 1? $prim_key[0]->index : null;
+		$callback= is_callable($options) ? $options:  igk_getv($options, "@callback");
+		
+		// igk_wln($query);
+		// igk_wln($out->m_tables);
+		
+		$_nn =  (igk_count($out->m_tables)>1);
+	
+		// igk_wln("number of column = ".	$out->m_fieldcount);
+		// igk_wln("number of rows = ".	$c);
+		// igk_wln($query);
+				// return $out;
+		// if  (igk_is_debug()){
+			// igk_wln("test : ");
+			// $dbresult->reset();
+			// igk_wln($dbresult->fetchArray(SQLITE3_NUM));
+			// exit;
+		// }
+		$c = 0;
+		///be aware: don't make call to !== it make bit exhausted
+		while($d = igk_db_fetch_row($dbresult))
+		{
+			//$dbresult->fetchArray();
+			// igk_wln("c====");
+			// igk_wln($d);
+			// continue;
+			//create row obj
+			$t = array();
+			foreach($out->m_columns as $k=>$s)
+			{
+				$t[($_nn? $s->table.".": ''). $s->name] = $d[$s->index];
+			}
+			$obj = (object)$t;
+			if ($callback && !$callback($obj)){
+				continue;
+			}
+			$c++;
+			
+			if ($v_primkey)
+			{
+				$out->m_rows[$d[$v_primkeyindex]] = $obj;
+			}
+			else if (count($prim_key)>1)
+				$out->m_rows[] = $obj;		
+			else //no primary key
+				$out->m_rows[] = $obj;		
+			$out->m_irows[] = $obj;
+		}
+		$out->m_rowcount = $c;
+		$out->m_primarykey = $v_primkey;
+		
+		return $out;
+	}
+	
+	///<summary>add a row to query result</summary>
+	///<remark>if build in query result . that will be a copy of the rows</remark>
+	public function addRow($row)
+	{		
+		if (($this->m_type =="igk_db_query_result")&&
+			($this->m_query == ":igk_build_in_query_result")){
+			if (is_object($row)){
+				$tab = array();
+				foreach($this->m_columns as $k=>$v){
+					$tab[$v->name] = igk_getv($row, $v->name);
+				}
+				$this->m_rows[] = (object)$tab;
+			}			
+			return;
+		}
+	
+		if (is_array($row) && (count($row) ==  $this->m_fieldcount))
+		{
+			$this->m_rows[] = $row;
+			$this->m_rowcount = count($this->m_rows);
+		}
+		else{
+			igk_wln("row not added ".$this->m_fieldcount. " isarray?".is_array($row). " || iscount? :: ".count($row)." == ".$this->m_fieldcount  );
+		}
+	}
+	public function getRowArray($index)
+	{
+		if (($index<0)&&($index>= $this->RowCount))
+		{
+			return null;
+		}
+		$f = array();
+		$c = 0;
+		foreach($this->m_columns as $k)
+		{
+			$f[$k->name] = $this->m_rows[$index][$c];
+			$c++;
+		}
+		$f["info"]=array();
+		if (isset($this->m_columns[0]))
+		$f["info"]["sourcetable"] = $this->m_columns[0]->table;
+		//$f["info"]["sourcedatabase"] = $this->m_dbname;
+		
+		return $f;
+	}
+	
+	public function getColumnIndex($columnname)
+	{
+		//igk_show_prev($this->m_columns);
+		if (isset($this->m_columns[$columnname]))
+		{
+			return $this->m_columns[$columnname]->index;
+		}
+		return -1;
+	}
+	public function getRows(){return $this->m_rows;}
+	public function getColumns(){return $this->m_columns; }
+	public function getRowCount(){return igk_count($this->m_rows);}
+	public function getHasRow(){ return ($this->getRowCount()>0);}
+	public function getColumnCount(){return igk_count($this->m_columns); }
+	//<summary>sort</summary>
+	public function SortBy($key, $asc=true, $preserveid=true){
+		return $this->SortValueBy($key, $asc, null, $preserveid);
+	}
+	///<summary>sort result </summary>
+	public function SortValueBy($key, $asc=true, $param=null, $preserveid=false){
+		if ($param==null)
+		{
+			$t = new IGKSorter();
+			$t->key = $key;
+			$t->asc = $asc;
+			$param = array($t, "SortValue");
+		}
+		// igk_wln("before ");
+		// igk_wln($this->m_rows);
+		$tab = $this->m_rows; //copy reference
+		
+		usort($tab, $param);		
+		$pm = $this->m_primarykey ?? IGK_FD_ID;//"clId";
+		if ($preserveid){
+			$t = array();
+			foreach($tab as $k){
+				$t[$k->$pm] = $k;
+			}
+			$this->m_irows = $tab;
+			$this->m_rows = $t;
+		}
+		else {			
+			$this->m_irows = $tab;	
+			$this->m_rows = $tab;
+		}				
+		return $this;
+	}
+	
+	public function select($callback){
+		$result = new IGKMySQLQueryResult();
+		$result->m_columns = $this->m_columns;
+		$result->m_type = "igk_db_query_filter_result";
+		$result->m_fieldcount  = $this->m_fieldcount;
+		foreach($this->m_rows as $k=>$v){
+			if ($callback($v)){
+				$result->m_rows[]  = $v;
+			}
+		}
+		return $result;
+	}
+}
+
+//init sql settings
+IGKSQLManager::Init(function(& $conf){
+	$n = "mysqli";
+	$conf["system"]="mysqli";
+	$conf[$n]["func"]= array();
+	
+	$conf[$n]["auto_increment_word"] = "AUTO_INCREMENT";
+	
+	$t = array();
+	$t["connect"] = "mysqli_connect";
+	$t["selectdb"] = "mysqli_select_db";
+	$t["check_connect"] = "mysqli_ping";
+	$t["query"] = "mysqli_query";
+	$t["escapestring"] = "mysqli_real_escape_string";
+	$t["num_rows"] = "mysqli_num_rows";
+	$t["num_fields"] = "mysqli_num_fields";
+	$t["fetch_field"] = "mysqli_fetch_field";
+	$t["fetch_row"] = "mysqli_fetch_row";
+	$t["close"] = "mysqli_close";
+	$t["error"] = "mysqli_error";
+	$t["errorc"] = "mysqli_errno";
+	$t["lastid"] = "mysqli_insert_id";
+
+
+	$conf[$n]["func"] = $t;
+});
+
+igk_sys_regSysController("IGKMySQLDataCtrl");
+
+?>

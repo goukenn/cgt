@@ -1,0 +1,80 @@
+<?php 
+
+// function __get_global(){
+	
+	// igk_wln("global call");
+	// igk_die("dk");
+	
+	
+// }
+// igk_die("k");
+$t->clearChilds();
+$doc->Title = "Manifest";
+
+$row = $this->Db->getPackageRow($this->getParam("template://row_id"));
+
+if (!$row)
+	return;
+
+// igk_wln($params);
+
+$dv = $t->addDiv();
+$dv["class"]="bar-header";
+$dv->addDiv()->addAJXA($this->getUri('back_ajx'))->addSvgSymbol("back");
+$dv->addSectionTitle(4)->Content = "Manifest : ".$row->clPackageName;
+
+$frm = $t->addDiv()->addForm();
+
+
+
+
+// $frm->addObData($row);
+$frm["action"]=$this->getUri("update_manifest&id=".$row->clId);
+$frm["igk-ajx-form"]=1;
+
+$man = $this->getPackageManifest($row->clPackageName);
+
+// $frm->addObData($man);
+
+
+// igk_html_buildform($frm->addDiv(), $row);
+
+//be aware of creating a callback inline solution 1:
+// $tab = igk_create_component_callback("e-mainifest-source", function() use($frm){
+	// return $frm->addAJXTabControl();
+// });
+// $frm->add($tab);
+
+// $tab->clearChilds();
+
+
+
+// solution 2: node must be cleared
+//working
+$tab = $frm->addAJXTabControl();
+$tab["id"] = "e-manifest-source";
+
+// $tab->setCallback("global", igk_create_file_callback($this, __FILE__, "__get_global"));
+// $tab->addTabPage("Delcaration", igk_get_component_uri($tab, "global"));
+// $tab->addTabPage("Visual Assets",igk_get_component_uri($tab, "visualassets"));
+
+
+$uri = igk_create_component_callback("TabUriListener", function()use($ctrl, $row){
+	return new TabUriListener($this);
+});
+
+$uri->setRow($row);
+
+
+// $tab->setCallback("global", igk_create_file_callback($this, __FILE__, "__get_global"));
+$tab->addTabPage("Delcaration", $uri->getUri("global"));//igk_get_component_uri($tab, "global"));
+$tab->addTabPage("Visual Assets",$uri->getUri( "visualassets"));
+$tab->addTabPage("Categories",$uri->getUri( "categories"));
+
+
+
+$bar = $frm->addDiv();
+$bar->addInput("btn.submit", "submit", R::ngets("btn.save"));//->addA($this->getUri('back'))->setClass("igk-btn igk-btn-default")->Content = "save";
+
+// $t->addDiv()->addA($this->getUri('back'))->setClass("igk-btn igk-btn-default")->Content = "back";
+?>

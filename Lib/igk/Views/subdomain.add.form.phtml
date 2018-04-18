@@ -1,0 +1,14 @@
+<?php
+
+include_once(dirname(__FILE__)."/subdomain.fc.pinc");
+
+$t->clearChilds();
+$t->addDiv()->addNotifyHost();
+$tab = igk_get_all_uri_page_ctrl();
+igk_notifyctrl()->setNotifyHost($t->addDiv(), __FILE__.":host");
+// $dv = $t->addDiv();
+
+igk_subdomain_fc_inflate($tab, $t);
+
+
+?>

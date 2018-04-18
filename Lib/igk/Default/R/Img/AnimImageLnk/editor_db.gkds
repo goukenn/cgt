@@ -1,0 +1,31 @@
+<!--This is a gkds DrSStudio file 9.3.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2014-->
+<gkds>
+  <Project>
+    <TargetSurface>2DDrawingSurface</TargetSurface>
+  </Project>
+  <Documents>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="32" Height="32" Id="LayerDocument_32986066">
+      <Layer GammaCorrection="0" Id="Layer_31348100">
+        <Circle Radius="15.55635" Center="16;16" FillBrush="Type:Solid;Colors:#FF626262;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_46827003" />
+        <Rectangle Bounds="7;6;9;19" FillBrush="Type:Solid;Colors:#F000;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_28005354" />
+        <Rectangle Bounds="18;13;9;12" FillBrush="Type:Solid;Colors:#F000;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_9186117" />
+      </Layer>
+    </LayerDocument>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="32" Height="32" Id="LayerDocument_32986066">
+      <Layer GammaCorrection="0" Id="Layer_31348100">
+        <Circle Radius="15.55635" Center="16;16" FillBrush="Type:Solid;Colors:#FF626262;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_46827003" />
+        <Rectangle Bounds="18;13;9;12" FillBrush="Type:Solid;Colors:#FF5186FF;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_9186117" />
+        <Rectangle Bounds="7;6;9;19" FillBrush="Type:Solid;Colors:#FF5186FF;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_28005354" />
+      </Layer>
+    </LayerDocument>
+    <LayerDocument FillBrush="Type:Solid;Colors:#FFFF;" BackgroundTransparent="True" Width="32" Height="32" Id="LayerDocument_32986066">
+      <Layer GammaCorrection="0" Id="Layer_31348100">
+        <Circle Radius="15.55635" Center="16;16" FillBrush="Type:Solid;Colors:#FEEE;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Circle_46827003" />
+        <Rectangle Bounds="18;13;9;12" FillBrush="Type:Solid;Colors:#F000;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_9186117" />
+        <Rectangle Bounds="7;6;9;19" FillBrush="Type:Solid;Colors:#F000;" StrokeBrush="Type:Solid;Colors:#0000;" Id="Rectangle_28005354" />
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>

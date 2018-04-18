@@ -1,0 +1,6 @@
+<igk:GoogleMapGeo>
+	<attr name="Uri">specifie the current uri of page to talk</attr>
+	<attr name="Key"></attr>
+	<attr name="Query"></attr>
+	<attr name="Type">place|view</attr>
+</igk:GoogleMapGeo>

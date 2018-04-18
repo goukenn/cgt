@@ -1,0 +1,126 @@
+<?php
+//
+// Balafon theme files for 
+// Private custom theme
+// in context variable
+//
+
+// $ctrl : controller that init the style
+// $file : current file 
+// $xsm_screen =  igk_app()->Doc->Theme->get_media(IGKHtmlDocThemeMediaType::XSM_MEDIA);
+// $sm_screen = igk_app()->Doc->Theme->get_media( IGKHtmlDocThemeMediaType::SM_MEDIA);
+// $lgm_screen = igk_app()->Doc->Theme->get_media( IGKHtmlDocThemeMediaType::LG_MEDIA);
+// $xlgm_screen = igk_app()->Doc->Theme->get_media( IGKHtmlDocThemeMediaType::XLG_MEDIA);
+// $xxlgm_screen = igk_app()->Doc->Theme->get_media( IGKHtmlDocThemeMediaType::XXLG_MEDIA);
+// $PTR = igk_app()->Doc->Theme->getPrintMedia();
+// $def : global definition
+//-----------------------------------------------------------------------------------------------------------------
+//variables 
+//-----------------------------------------------------------------------------------------------------------------
+//$css_m : main css class of this controller
+//$def : init global definition
+
+//add your custom theme to definitions
+
+
+
+//-----------------------------------------------------------------------------------------------------------------
+//register your font package 
+//-----------------------------------------------------------------------------------------------------------------
+//type of  WOFF, TrueTypeFont are supported
+//igk_css_reg_font_package("packagename" , "[basedir_path_to_fontfile]", "[type]");	
+//-----------------------------------------------------------------------------------------------------------------
+//register used color
+//-----------------------------------------------------------------------------------------------------------------
+//type of  WOFF, TrueTypeFont are supported
+//igk_css_regcolor(colorname , colorvalue);	
+//exemple: igk_css_regcolor('mydata-color', '#fff');
+
+$bar_zindex = 0x200;
+$def["script[type='text/balafonjs']"]="display:none !important;";
+$def[".igk-body.igk-dsg-mode"]="overflow-y:auto;padding-top:32px; padding-left:32px; padding-bottom:32px;";
+// $def[".igk-body.igk-dsg-mode .framebox-dialog"]="left:10px; right:10px;";
+
+
+$def[".igk-body.igk-dsg-mode .igk-bodybox.fit.overflow-y-a"]="height:auto; overflow-y:initial !important;";
+$def[".igk-body .igk-winui-designer"] = "[bgcl:designer-bgcl] [fcl:designer-fcl] {sys:posfix, fitw,loc_t, loc_l} z-index:{$bar_zindex};padding:0px; ";
+$def[".igk-body .igk-winui-designer > .igk-row > div"] = "{sys:no-wrap}";
+
+$def[".igk-body .igk-winui-designer .igk-svg-symbol"]="fill:#fff; padding:4px; [trans:none]";
+// $def[".igk-body .igk-winui-designer .igk-svg-symbol:hover"]="fill:[cl:designer-h-fcl]";
+
+$def[".igk-body .igk-winui-designer .scr-reader"]="{sys:posab}left:-9999px; text-indent:-9999px";
+$def[".igk-body .igk-winui-designer .ibtn" ] = "width:32px; height:32px; line-height:0; display:inline-block; vertical-align:bottom;";
+
+$def[".igk-body .igk-winui-designer .igk-dsg-btn"] = "cursor:pointer;";
+$def[".igk-body .igk-winui-designer .igk-dsg-btn:hover"] = "[fcl:designer-h-fcl]";
+$def[".igk-body .igk-winui-designer .igk-dsg-btn:hover:before"] = "{sys:posab,fit,loc_l} [bgcl:designer-btn-bg] content:' '; z-index:-2";
+$def[".igk-body .igk-winui-designer .igk-dsg-btn a"]="{sys:dispib}[fcl:designer-fcl] line-height:32px; vertical-align:bottom; cursor:pointer;margin:0px -4px; padding:0px 4px;";
+$def[".igk-body .igk-winui-designer .igk-dsg-btn:hover > a:hover"]="background-color:[cl:designer-h-bgcl]; [fcl:designer-h-fcl]";
+$def[".igk-body .igk-winui-designer a:hover .igk-svg-symbol"]="fill:[cl:designer-h-fcl]";
+
+$def[".igk-winui-designer .igk-dsg-btn"]= "{sys:dispib} font-size:10pt; font-weight:400; line-height:32px; padding:0px 4px;";
+$def[".igk-winui-designer .adm-option"]= "{sys:floatr} line-height:32px;padding-right:10px; z-index:10;";
+
+$def[".igk-winui-designer .sub-menu, .igk-winui-designer .igk-dsg-btn > ul"]="{sys:posab, dispn, loc_l} [bgcl:designer-subm-bgc] margin:0px; min-width:146px; max-height:300px; overflow:hidden; overflow-y:auto;";
+$def[".igk-winui-designer .sub-menu li, .igk-winui-designer .igk-dsg-btn > ul li"]="{sys:no-wrap}";
+$def[".igk-winui-designer .igk-dsg-btn:hover > ul"]="{sys:dispb}";
+$def[".igk-winui-designer .igk-dsg-btn > ul li > a"] = "{sys:dispb, fitw, no-margin} padding:0px 10px;";
+
+$def[".igk-winui-designer ul li > ul.sub"] = "{sys:dispn}";
+$def[".igk-winui-designer ul li:hover > ul.sub"] = "{sys:dispb}";
+$def[".igk-winui-designer .igk-dsg-btn > ul  li > a:hover"]="[fcl:designer-h-fcl]";
+$def[".igk-winui-designer .igk-dsg-btn ul > li > a.igk-active"]="color:red";
+
+$def[".igk-body.igk-dsg-mode .clselect"]="width:100%";
+
+
+$def[".igk-body.igk-dsg-mode .igk-tracelist"]="background-color:#ececec";
+
+
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect"]="{sys:dispib} position:relative; border:1px solid #2ea7e0; margin:4px; padding:4px;line-height:0";
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect *"]="line-height:1";
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect > .snippet"]="{sys:posab} border-radius:50%; background-color:#2ea7e0; width:8px; height:8px; cursor:pointer;margin-left:-4px; margin-top:-4px;";
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect > .snippet.left"]="left:0px; top:50%";
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect > .snippet.right"]="right:0px; top:50%; margin-right:-4px";
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect > .snippet.bottom"]="bottom:0px; left:50%; margin-bottom:-4px;";
+$def[".igk-body.igk-dsg-mode .igk-dsg-rect > .snippet.top"]="top:0px; left:50%";
+
+
+$def[".igk-body .igk-winui-hierarchi"] = "position:fixed; width:32px; [bgcl:designer-bgcl] top:32px; bottom :0px; left:0px; z-index:80";
+$def[".igk-body .igk-winui-hierarchi .igk-svg-symbol"]="fill:#fff";
+$def[".igk-body .igk-winui-hierarchi li:hover .igk-svg-symbol"]="fill:[cl:designer-h-fcl]";
+$def[".igk-body .igk-winui-hierarchi > ul"] = ""; //root ul
+$def[".igk-body .igk-winui-hierarchi > ul > li"] = "{sys:posr} min-height:32px; line-height:32px; min-width:32px; padding:0px 8px";
+$def[".igk-body .igk-winui-hierarchi > ul > li:hover:before"]="content:' '; background-color:white; opacity:0.2; {sys:fit,loc_l, posab} border-left:4px solid #4ecfff; z-index:-2 ";
+$def[".igk-body .igk-winui-hierarchi > ul > li > ul"]="{sys:dispn,no-wrap,posab} [bgcl:designer-bgcl] left:32px; z-index:19890;";
+$def[".igk-body .igk-winui-hierarchi > ul > li > ul:hover"]="{sys:dispib}";
+$def[".igk-body .igk-winui-hierarchi > ul > li > ul > li"]="display:inline-block; padding:0px 4px;";
+$def[".igk-body .igk-winui-hierarchi > ul > li:hover > ul"]="display:inline-block !important;";
+$def[".igk-body .igk-winui-hierarchi > ul > li:hover > ul:hover"]="display:inline-block !important;";
+
+
+
+$xsm_screen[".igk-body .igk-winui-hierarchi"] = "display:none !important;";
+
+ $PTR[".igk-body .igk-winui-hierarchi, .igk-body .igk-winui-designer"]="display:none !important";
+$cTheme = 'blue';
+
+switch($cTheme){
+case 'blue':
+igk_css_regcolor("designer-bgcl", "#233247");
+igk_css_regcolor("designer-fcl", "#eee");
+igk_css_regcolor("designer-h-fcl", "#FFBC49");
+igk_css_regcolor("designer-subm-bgc", "#233247");
+break;
+default:
+igk_css_regcolor("designer-bgcl", "#454");
+igk_css_regcolor("designer-fcl", "#eee");
+igk_css_regcolor("designer-h-fcl", "#FFBC49");
+break;
+}
+// igk_ilog("loading style ".$theme->Name);
+igk_css_regcolor("designer-h-bgcl", "#888");
+igk_css_regcolor("designer-btn-bg", "#777");
+
+?>

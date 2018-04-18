@@ -1,0 +1,11 @@
+<?php
+//store variable and utilityp that will be used as comment .and shared in the view system
+
+$_not_implement_ajx = function(){
+	$pan = igk_createNode("panel");
+	$pan->addDiv()->Content = "/!\\ sorry page or service not yet implement";
+	$pan->RenderAJX();
+	igk_exit();
+};
+
+?>

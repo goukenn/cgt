@@ -1,0 +1,19 @@
+﻿<!--This is a gkds ICore file 9.7.d-->
+<!--Charles A.D. BONDJE DOUE-->
+<!--igkdev © 2008-2016-->
+<gkds>
+  <Project>
+    <SurfaceType>2DDrawingSurface</SurfaceType>
+    <FileName>D:\wamp\www\igkdev\Lib\igk\Data\R\svg\icons\more.svg.gkds</FileName>
+  </Project>
+  <Documents>
+    <LayerDocument Id="LayerDocument_21084988" FillBrush="#FFFF" InterpolationMode="HightQualityBilinear" PixelOffset="Half" BackgroundTransparent="True" Width="100" Height="100">
+      <Layer Id="Layer_17094261">
+        <Path Closed="True" FillBrush="#FFFF" StrokeBrush="#F000" Id="Path_62052751">
+          <PointTypes>0;1;1;129;0;1;1;129;0;1;1;129</PointTypes>
+          <Points>40;39.00002 62;39.00002 62;61.00002 40;61.00002 1;39.00002 23;39.00002 23;61.00002 1.000001;61.00002 79;39.00001 101;39.00001 101;61 79;61</Points>
+        </Path>
+      </Layer>
+    </LayerDocument>
+  </Documents>
+</gkds>
