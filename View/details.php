@@ -1,6 +1,16 @@
 <?php
 
+//disable post request uri
+global $wp_query;
+unset($wp_query->queried_object);
+$wp_query->parse_query(array("page"=>"", "pagename"=>"details", "post"=>""));
+$wp_query->queried_object = (object)["post_type"=>""];
 
+// igk_wln($wp_query->get_queried_object());
+
+// igk_wln("is data ? ". !isset($wp_query->queried_object));
+// igk_wln($wp_query);
+// igk_exit();
 get_header();
 
 $uri = igk_io_request_entry();

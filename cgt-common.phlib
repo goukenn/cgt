@@ -1425,10 +1425,31 @@ function igk_cgt_html_filter($tab, $u=null){
 
 ///<summary>uri management</summary>
 function igk_cgt_base_uri(){
-	return igk_io_global_uri() ?? igk_io_baseUri();
+	$h = igk_io_global_uri() ?? igk_io_baseUri();
+	if(igk_uri_is_dir($h))
+		$h.="/";
+	return $h;
 }
+
+
+
+///<summary>determine that a local uri target a directory</summary>
+function igk_uri_is_dir($uri){
+	//check if local uri is dir
+	$buri = igk_io_baseuri();
+	$s = strstr($uri, $buri);
+	if (empty($s))
+		return 0; //not a local base path
+	$bdir = igk_str_rm_last(igk_io_basedir(), DIRECTORY_SEPARATOR);
+	
+	$b = igk_io_dir(str_replace($buri, $bdir, $uri));
+	return is_dir($b);
+}
+
 function igk_cgt_action_uri($uri){
 	$buri = igk_getv(explode("?", igk_io_request_uri()), 0);
+	if (igk_uri_is_dir($buri))
+		$bdir .= "/";
 	return $buri."?cgt-actions=".$uri;
 }
 

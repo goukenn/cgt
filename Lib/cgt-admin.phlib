@@ -64,10 +64,15 @@ class CGT_Admin{
 		$action = igk_getr("cgt-actions");		
 		if (!empty($action)){	
 			$a = "action_".$action;
+			try{
 			if (method_exists($this, $a)){
 				call_user_func_array(array($this, $a), array());
 			}else
 				igk_cgt_handle_action($action, $this);
+			}
+			catch(Exception $ex){
+				igk_ilog("Error : ".$ex->getMessage());
+			}
 		}	
 		//$tab = igk_io_getfiles(IGK_CGT_INSTALLDIR, "/\.js$/");
 		// igk_wln($tab);
@@ -139,8 +144,11 @@ class CGT_Admin{
 			igk_cgt_plugin_uri()."/R/svg/admin-logo.svg"
 			);	
 	}
-	///<summary>formr used to configure the plugin</summary>
+	///<summary>form used to configure the plugin. administration</summary>
 	public function form(){
+		
+		
+		
 			$action = igk_getr("action");
 			$meth = "action_".$action;
 			if (method_exists($this, $meth)){
@@ -314,7 +322,7 @@ class CGT_Admin{
 						
 						$tr = $table->addTr();
 						$tr->addTd()->addInput("sl", "checkbox");
-						$tr->addTd()->addA(igk_cgt_base_uri()."/".$v->name)->Content = $v->name;
+						$tr->addTd()->addA(igk_cgt_base_uri().$v->name)->Content = $v->name;
 						$tr->addTd()->addTextEdit($v->name."[key]", "?cgt-actions=addkey&n=".$v->name)->Content = $key ?? "Not defined"; 
 						$tr->addTd()->Content = igk_cgt_get_offers_display($v) ?? __("No Offer");
 			
@@ -459,10 +467,6 @@ class CGT_Admin{
 	}
 	
 	
-	public function action_test_store(){
-		igk_wln($_REQUEST);
-		igk_exit();
-	}
 	public function action_editfilter(){
 		$n = igk_getr("t");
 		$c = igk_getv(igk_cgt_get_group(), $n);
@@ -479,9 +483,8 @@ class CGT_Admin{
 			$frm = null;
 			
 			$frm = $d->addForm();
-			$frm["action"] = igk_cgt_base_uri()."/?cgt-actions=store_filter";
+			$frm["action"] = igk_cgt_base_uri()."?cgt-actions=store_filter";
 			$frm["method"]="POST";
-			// $frm["action"] = igk_cgt_base_uri()."?cgt-actions=action_test_store";
 			
 			$box = $frm->addDiv();
 			$box->setStyle("max-height:100%; overflow-y:hidden");
@@ -512,7 +515,13 @@ class CGT_Admin{
 	}
 	
 	public function action_store_filter(){	
-		
+		$referer = igk_getv($_SERVER, "HTTP_REFERER");
+		if(!is_super_admin()){
+			if ($referer)
+				igk_navto($referer);
+			else
+				igk_navto(igk_cgt_base_uri());
+		}
 		$ajx = igk_is_ajx_demand();
 		$cnf = igk_cgt_configs();
 		$o = null;

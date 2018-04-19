@@ -7,3 +7,9 @@
 li[rol]{
 	display:none;
 }
+
+.fgroup .title{
+	font-weight: 400;
+	font-size: 1.3em;
+	white-space: nowrap;
+}

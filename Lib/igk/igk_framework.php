@@ -6794,12 +6794,6 @@ function igk_conf_load_content($s, $tag="configs", $deftext="text"){//load conte
 	return null;
 }
 
-
-
-
-
-
-
 ///<summary>used to load configuration settings</summary>
 ///<param name="obj">output object</param>
 ///<param name="n">igk html node to load</param>
@@ -19710,7 +19704,8 @@ function igk_xml_read_doctype($s, & $pos){
 	
 }
 
-///<summary>used to read xml</summary>
+///<summary>used to read xml. portion data</summary>
+///<param name="c">xml content</param>
 ///<param name="path">xpath object</param>
 ///<param name="callback">the callback(index) used to read valid data at index</param>
 function igk_xml_read_xml($c, $path=null, & $inf=null, $callback=null){
@@ -19952,6 +19947,7 @@ function igk_xslt_transform($xml, $xslt){
 	$xsl = new DOMDocument();
 	$xsl->loadXML($xslt);		
 	$proc = new XSLTProcessor();
+
 	$proc->importStyleSheet($xsl);		
 	return $proc->transformToXML($dom);
 }

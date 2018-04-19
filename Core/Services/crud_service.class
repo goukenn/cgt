@@ -31,20 +31,231 @@ class crud_service extends __base_ns\base_service{
 	}
 	
 	public function viewOfferDetails($id){
-		// $f = igk_io_dir(IGK_CGT_PLUGIN_DIR."/Articles/offers/details/1/{$id}");		
-		// if (file_exists($f)){
-			// igk_header_cache_output(3600);
-			// ob_clean();
-			// include($f);
-			// ob_flush();
-			// igk_exit();
-		// }else{
-			$g = $this->toObject($this->getOfferDetails($id));
-			if ($g){
-				$this->viewList($g);
+		//cacke details
+		$lang = igk_cgt_current_lang();
+		 $f = igk_io_dir(IGK_CGT_PLUGIN_DIR."/Articles/offers/details/{$id}.{$lang}.html");		
+		if (file_exists($f)){
+			igk_header_cache_output(3600);			
+			include($f);
+			return;
+		}
+		
+		$xml = $this->getOfferDetails($id);
+		//firt model - marked as old version
+		// $g = $this->toObject($xml);
+		// if ($g){
+			// $this->viewList($g);
+		// }	
+		// return;
+		
+		
+		if(empty($xml))
+			return;
+		
+		// igk_io_w2file("d:\\temp\\offer_{$id}.xml", $xml);
+		
+		//get sub in xml data
+		$typeOffreXML = igk_xml_read_xml($xml, "offres/offre/typeOffre");
+		$obj = igk_conf_load_content($typeOffreXML, "offres");
+		
+		$type = igk_conf_get($obj, "offre/typeOffre/label/[lang=".$lang."]/value");
+		$code = $obj->offre->typeOffre->idTypeOffre;
+		
+		$xslf =igk_io_dir(IGK_CGT_PLUGIN_DIR."/Data/xsl/details.{$code}.{$lang}.xsl");
+		
+		if (file_exists($xslf)){			
+			$xsl = igk_io_read_allfile($xslf);			
+			//load width xml
+			$dv = igk_createNode("div");
+			
+			
+			$img_o = $dv->addGallery();
+			$img = igk_cgt_get_service("img");
+			$img->setContent(1);
+			
+			//main picture
+			//$img_o->addPicture($img->getImageUri($id));
+			
+			
+			$typeOffreXML = igk_xml_read_xml($xml, "offres/offre/relOffre");
+			$obj = igk_conf_load_content($typeOffreXML, "offres");
+		
+			$d = igk_conf_get($obj, "offre/relOffre");
+			if ($d){
+			foreach($d as $k=>$v){
+				$img_o->addPicture($img->getImageUri($v->offre->codeCgt));
 			}
-		// }
-		return false;
+			}
+			else{
+				$img_o->addPicture($img->getImageUri($id));
+			}
+			
+			$h = igk_xslt_transform($xml, $xsl);
+			
+			$dv->addDiv()->content = $h;
+			$dv->RenderAJX();
+			return;
+		}
+		
+		else{
+			//for code : 3
+			$xsl = igk_createXsltNode();
+			$xsl["xmlns:cgt"]= IGK_CGT_PIVOT_NS;
+			$xsl["xmlns:fn"]= "http://www.w3.org/2005/xpath-functions";
+			$xsl["version"]="2.0";
+			$xsl->add("xsl:output")->setAttributes([
+			"method"=>"xml",
+			"version"=>"1.0",
+			"encoding"=>"utf-8"
+			]);
+			
+			$urit = $xsl->add("xsl:template");
+			$urit["name"] = "viewuri";
+			$urit->add("xsl:param")->setAttribute("name", "v");			
+			$urit->add("li")->add("a")->setAttribute("href", "{\$v}")->add("xsl:value-of")->setAttribute("select", "\$v");
+			
+			
+			$t = $xsl->add('xsl:template')->setAttribute("match", "cgt:offres/cgt:offre");
+			$root = $t->add("div");
+			
+			$root->addDiv()->setAttributes([
+			"class"=>"title"
+			])
+			->add("xsl:value-of")->setAttribute("select", "current()/cgt:nom");
+			
+			// test to select only element value
+			// $root->addDiv()->setAttributes([
+			// "class"=>"email"
+			// ])
+			// ->add("xsl:value-of")->setAttribute("select", "current()/cgt:spec[@urn='urn:fld:mail1']/cgt:value");
+			
+			
+			//select all spec
+			$root->add("xsl:variable")->setAttribute("name", "spec")->setAttribute("select", "current()/cgt:spec/@urn");
+			
+			$append_if = function ($r, $id, $tag='div'){
+					$if = $r->add("xsl:if")->setAttributes([
+					"test"=>"\$spec = '{$id}'"
+					]);
+					$if->add("xsl:variable")->setAttribute("name", "v")->setAttribute("select", "current()/cgt:spec[@urn='{$id}']/cgt:value");
+					$if->add("xsl:variable")->setAttribute("name", "type")->setAttribute("select", "current()/cgt:spec[@urn='{$id}']/cgt:type");
+					
+					$choose = $if->add("xsl:choose");
+					$temp = $choose->add("xsl:when")->setAttribute("test", "\$type = 'URL'")->add("xsl:call-template")
+					->setAttribute("name", "viewuri");
+					
+					$temp->add("xsl:with-param")->setAttribute("name", "v")->add("xsl:value-of")->setAttribute("select", "\$v");
+					
+					$choose->add("xsl:otherwise")->add($tag)->add("xsl:value-of")->setAttribute("select", "\$v");
+			};
+			
+			$root->add("xsl:if")->setAttributes([
+			"test"=>"\$spec = 'urn:fld:descmarket20'"
+			])
+			->add("div")->add("xsl:value-of")
+			->setAttribute("select", "current()/cgt:spec[@urn='urn:fld:descmarket20']/cgt:value")
+			->setAttribute("disable-output-escaping", "yes")
+			;
+	
+			//address
+			$if = $root->add("xsl:if")->setAttributes([
+			"test"=>"\$spec = 'urn:fld:adr'"
+			]);
+			$if->add("xsl:variable")->setAttribute("name", "v")->setAttribute("select", "current()/cgt:spec[@urn='urn:fld:adr']/cgt:value");
+			$if->add('div')->add("xsl:value-of")->setAttribute("select", "\$v");
+			
+			
+			$append_if($root, "urn:fld:phone1"); //phone
+			$append_if($root, "urn:fld:mobi1"); //mobile
+			$append_if($root, "urn:fld:urlweb"); //url
+			
+			
+			
+			//if contain mail1
+			$if = $root->add("xsl:if")->setAttributes([
+			"test"=>"\$spec = 'urn:fld:mail1'"
+			]);
+			$if->add("xsl:variable")->setAttribute("name", "uri")->setAttribute("select", "current()/cgt:spec[@urn='urn:fld:mail1']/cgt:value");
+			$if->add("li")->add("a")->setAttribute("href", "mailto:{\$uri}")->add("xsl:value-of")->setAttribute("select", "\$uri");
+			
+			
+
+			
+	
+	
+		//$root->addDiv()->add("xsl:value-of")->setAttribute("select", "fn:indexof((10,8,8,9), 8)");
+			
+			
+			
+			
+			
+			$dv = igk_createNode("div");
+			$dv->addSectionTitle(5)->Content = $type;
+			
+			//'''picture gallery
+			
+			$img_o = $dv->addGallery();
+			$img = igk_cgt_get_service("img");
+			$img->setContent(1);
+			
+			//main picture
+			//$img_o->addPicture($img->getImageUri($id));
+			
+			
+			$typeOffreXML = igk_xml_read_xml($xml, "offres/offre/relOffre");
+			$obj = igk_conf_load_content($typeOffreXML, "offres");
+		
+			$d = igk_conf_get($obj, "offre/relOffre");
+			if ($d){
+			foreach($d as $k=>$v){
+				$img_o->addPicture($img->getImageUri($v->offre->codeCgt));
+			}
+			}
+			else{
+				$img_o->addPicture($img->getImageUri($id));
+			}
+		
+			// igk_wln($obj->offre->relOffre);
+			// igk_exit();
+			
+			// $img_o->addPicture($img->getImageUri("CHB-1G-00N7-013T"));
+			
+			// $img_o->addPicture($img->getImageUri("ANX-1G-00ND-00G4"));
+			
+			
+			
+			
+			$s = $xsl->Render();
+			$h = igk_xslt_transform($xml, $s);
+			
+			$dv->addDiv()->content = $h;
+			
+			//$dv->addXslt($xml, $s, 1);
+			
+			
+			igk_io_w2file($xslf, $s);
+			$s = $dv->Render();
+			igk_wl($s);
+			
+			// igk_io_w2file("d:\\temp\\d.xml", $s);
+			//store to file
+			
+			
+			return;
+			
+			
+		}
+		
+		
+		
+		// return;
+		
+		// $g = $this->toObject($xml);
+		// if ($g){
+			// $this->viewList($g);
+		// }		
+		// return false;
+		
 	}
 	
 	public function viewList($rtab){

@@ -53,9 +53,6 @@ $c = igk_cgt_get_conf(
 )
 );
 
-// igk_wln($c);
-// exit;
-
 
 
 foreach($c as $k=>$v){
@@ -68,7 +65,7 @@ if (isset($row->offre->relOffre)){
 	$img->setContent(1);
 	
 	
-	if (is_array($specs)){//spect
+	if (is_array($specs)){//spec
 		foreach($specs as $k=>$v){				
 			$s = $this->toObject($this->getOfferDetails($v->offre->codeCgt));				
 			$g = igk_getv(igk_cgt_get_spec($s->offre),"urn:fld:url");

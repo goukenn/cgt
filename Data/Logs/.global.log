@@ -1,0 +1,21 @@
+11:16:42 - [igk_sys_g_handle_error] - /!\severity :8
+message :ob_end_clean(): failed to delete buffer. No buffer to delete
+filename :D:\wamp\www\wordpress\wp-content\plugins\cgt\Lib\igk\igk_framework.php
+line :3014
+request_uri :/wordpress/details/CHB-1G-00ND-0001
+query_string :
+
+12:01:37 - [igk_sys_g_handle_error] - /!\severity :8
+message :Undefined variable: ob
+filename :D:\wamp\www\wordpress\wp-content\plugins\cgt\igk_framework.wp.pinc(142) : eval()'d code
+line :183
+request_uri :/wordpress/details/CGT_0004_000008A5
+query_string :
+EvaluatedCode::[183]:
+12:05:49 - [igk_sys_g_handle_error] - /!\severity :8
+message :Use of undefined constant igk_io_read - assumed 'igk_io_read'
+filename :D:\wamp\www\wordpress\wp-content\plugins\cgt\igk_framework.wp.pinc(142) : eval()'d code
+line :67
+request_uri :/wordpress/details/CGT_0004_000008A5
+query_string :
+EvaluatedCode::[67]:

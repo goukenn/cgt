@@ -6065,6 +6065,7 @@ createNS("igk.dom",{ //dom utilities
 		return ex;
 	}
 	,transformXSLString:function(sxml,sxsl){
+
 			//return the document 
 			var ex=null;
 			if(igk.navigator.$ActiveXObject()){
@@ -6096,6 +6097,7 @@ createNS("igk.dom",{ //dom utilities
 				
 				 if(document.implementation && document.implementation.createDocument){
 					  var xsltProcessor=new XSLTProcessor();
+					  console.debug(xsltProcessor);
 					  //load xml 
 					  var xsl=igk.dom.loadXML(sxsl);
 					  var xml=igk.dom.loadXML(sxml);
@@ -6112,15 +6114,7 @@ createNS("igk.dom",{ //dom utilities
 						  
 							  xsltProcessor.importStylesheet(dsl);
 							  ex  = xsltProcessor.transformToFragment(dxl, document);
-							  // console.error("kjd"+ex);
-							  // console.debug(ex);
-					  
-							  // if(ex){
-								  //get root node
-								  //console.debug(ex.innerHTML);
-								  // console.debug(ex);
-								  //ex=__dom_get_root(ex);
-							  // }
+							
 					  }
 				 }
 			}
@@ -22148,7 +22142,7 @@ igk.system.createNS("igk.html5.audioBuilder",{
 		var f = igk.createNode("iframe");		
 		igk.dom.copyAttributes(this.o, f.o);//.copyAttributess(this);
 		f.reg_event("error",function(){
-			//alert("error");
+			
 		}).reg_event("load", function(){
 		});
 		igk.dom.replaceChild(this.o, f.o);//.replaceNode(f);

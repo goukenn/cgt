@@ -16,14 +16,9 @@ class IGK_CGT_SearchZone extends WP_Widget{
 		$s = igk_cgt_filter_data($gp);
 		if ($s==null)
 			return;
-		$d = igk_createNode("div");	
-		
-	
-		
-		
+		$d = igk_createNode("div");			
 		$selfilter = igk_getr("filter");
-				// igk_wln($selfilter);
-				// igk_exit();
+		
 		if($selfilter ){
 			$gfilter = array();
 			foreach($selfilter as $k=>$v){
@@ -50,8 +45,7 @@ class IGK_CGT_SearchZone extends WP_Widget{
 						$gfilter = array_merge($gfilter, array_combine($v,$v));
 					break;
 				}
-			}
-			
+			}			
 			//igk_wln($gfilter);
 			$selfilter = $gfilter;
 			//exit;
@@ -72,39 +66,21 @@ class IGK_CGT_SearchZone extends WP_Widget{
 					// igk_wln($c);
 					// igk_exit();
 				}
-		// igk_wln($c);
-		// igk_wln($selfilter);
-		// igk_exit();
+		
 			
-			
-		}
-		// $d->addNoTagObData(function(){
-		// igk_wcode($_REQUEST);			
-		// exit;
-		// });
+		}		
+		//build widget form
+		$frm  = $d->addForm();		
+		$box = $frm->addPanelBox();		
+		igk_html_title($box->addDiv(), $gp);		
 		
-		//mark the vv
-		
-
-		$frm  = $d->addForm();
-		
-		$box = $frm->addPanelBox();
-		
-		igk_html_title($box->addDiv(), $gp);
-		
-		
-		$frm["action"]=igk_cgt_base_uri()."/{$gp}?cgt-actions=filter&gp={$gp}";
+		$frm["action"]=igk_cgt_base_uri()."{$gp}?cgt-actions=filter&gp={$gp}";
 		$frm["class"]="search-z fitw";		
 		$imgsrv = igk_cgt_get_service("img");
-		
-		
+
 		//display
-		$display = array(); //store display groups
-		
+		$display = array(); //store display groups	
 		$dv = $box->addDiv();
-		
-		// igk_wln($selfilter);
-		// exit;
 		$uls = array();
 		
 		foreach($s as $k=>$v){			
@@ -118,7 +94,8 @@ class IGK_CGT_SearchZone extends WP_Widget{
 				$ul = igk_getv($display, $v_name);
 				if ($ul==null){				
 					$ul= $dv->add("ul");				
-					$ul->add("li")->Content = $v_name;
+					$ul["class"]="fgroup ".str_replace(":","-", $m);
+					$ul->add("li")->setClass("title")->Content = $v_name;
 					$display[$v_name]= $ul;
 					$uls[] = $ul;
 				}
@@ -146,7 +123,7 @@ class IGK_CGT_SearchZone extends WP_Widget{
 								"name"=>"filter[".IGK_CGT_MCHOICE."][".$m."][]",
 								"value"=>$v_v
 								)
-							);
+							)->setClass("mchoice ".str_replace(":", "-", $v_v)); //class to convert urn:val:class:3ear to urn-val-class-3ear
 							
 							if ($selfilter){
 								if (isset($selfilter["\0m"][$v_v])){
@@ -161,7 +138,7 @@ class IGK_CGT_SearchZone extends WP_Widget{
 								"name"=>"filter[".$m."][]",
 								"value"=>$v_v
 							)
-							);
+							)->setClass("choice ".str_replace(":", "-", $v_v));
 							if ($selfilter){
 								// igk_wln("chck for ".$v_v);
 								if (isset($selfilter[$v_v])){
@@ -193,78 +170,36 @@ class IGK_CGT_SearchZone extends WP_Widget{
 		}
 		
 		
-		
-		//sort uls
-		foreach($uls as $ul){
-							
-			IGKHtmlItem::SortChildCallback($ul, function($i,$s){
-							$x = igk_getv($i, "ttag");
-							$y = igk_getv($s, "ttag");
-							
-							// igk_wln("tag:x : ".$x);
-							// igk_wln("tag:y : ".$y);
-							return strcmp($x, $y);;
-						});
-						//break;
-					
-		}
-		// $dv = $box->addDiv();
-		// foreach($s as $k=>$v){
+		$urn_regex = "/(?P<idx>[0-9]+)(?P<name>(.)+)$/i";
+		//sort uls - class data name
+		foreach($uls as $ul){							
+			IGKHtmlItem::SortChildCallback($ul, function($i,$s)use($urn_regex){
+				$x = igk_getv($i, "ttag");
+				$y = igk_getv($s, "ttag");
 			
-			// foreach($v as $m=>$n){
-				// $tab = explode("|", $n);
-				// $ul= $dv->add("ul");
+				if (preg_match($urn_regex,$x, $tab1) && 
+					preg_match($urn_regex,$y, $tab2)){
+					//return group
+					//igk_ilog("matching ");
+					$x = $tab1["name"].$tab1["idx"];
+					$y = $tab2["name"].$tab2["idx"];
+					//igk_ilog($tab1);
+				}
 				
-				// $ul->add("li")->Content = igk_cgt_get_urn_display($k, $m);
-				// foreach($tab as $v_k=>$v_v){
-					// $li = $ul->add("li")
-					// ->setClass("no-wrap");
-					// $ip = $li->add("input")->setAttributes(
-					// array(
-						// "type"=>"checkbox",
-						// "name"=>"filter[".$m."][]",
-						// "value"=>$v_v
-					// )
-					// );
-					
-					// if ($selfilter){
-						// if (isset($selfilter[$v_v])){
-							// $ip["checked"] = true;
-						// }
-					// }
-					
-					// $li->add('span')
-					// ->setClass("no-wrap")
-					// ->Content =  igk_cgt_get_urn_display($k, $v_v);
-					// $size = igk_cgt_get_picto_size($v_v);
-					// $li->addImg()
-					// ->setAttribute("alt", $v_v)
-					// ->setSrc($imgsrv->getPictoUri($v_v, $size->x,$size->y));
-				// }
-			// }
-		// }
+				return strcmp($x, $y);
+			});					
+		}
 		
 		$a = $frm->addDiv();
 		$a->addDiv()->addInput("btn.filter", "submit", __("Filter"));
 		$d->RenderAJX();
-		// igk_exit();
 	}
 
 	public function form($instance){
 		$d = igk_createNode("div");
 		$pid = $this->get_field_id("page");
-		$pn = $this->get_field_name("page"); //important to store data
-		
-		$page = isset($instance["page"])? $instance["page"] : "";
-		// $ul = $d->addUl();		
-		// $ul->add("li")->addXmlNode("input")->setAttributes(
-			// array(
-			// "name"=>$pn,
-			// "id"=>$pid,
-			// "type"=>"text",
-			// "value"=>$page			
-			// )
-		// );		
+		$pn = $this->get_field_name("page"); //important to store data		
+		$page = isset($instance["page"])? $instance["page"] : "";		
 		$d->RenderAJX();
 	}
 }
