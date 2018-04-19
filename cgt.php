@@ -8,6 +8,8 @@ Author Uri: https//igkdev.be
 Description: Intégration des services PIVOT associciés au Commissariat Génaral au Tourisme (Belgique-Benelux).
 */
 
+
+
 define("IGK_CGT_PLUGIN_DIR", dirname(__FILE__));
 
 include_once(IGK_CGT_PLUGIN_DIR."/cgt-common.phlib");
@@ -19,6 +21,9 @@ class IGK_CGT_Plugin{
 		igk_wp_registerlib(IGK_CGT_PLUGIN_DIR."/");	
 	}
 }
+
+
+
 //init global value if not loaded
 global $action;
 new IGK_CGT_Plugin();

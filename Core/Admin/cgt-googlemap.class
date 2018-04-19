@@ -22,7 +22,7 @@ class cgt_googleMapService extends __base_ns\AdminService {
 	}
 	public function configure($t){
 		$t->setId("gmservice");		
-		igk_html_title($t->addDiv(), "Googlemaps service");		
+		igk_html_title($t->addDiv(), _cgt("Googlemaps service"));
 		$t->addNotifyHost();
 		$frm = $t->addForm();		
 		$apikey = $this->getApiKey();

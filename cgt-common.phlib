@@ -51,8 +51,8 @@ function igk_cgt_plugin_uri(){
 	$f = dirname(__FILE__);
 	$root = igk_str_rm_last(igk_html_uri(igk_getv($_SERVER, 'DOCUMENT_ROOT')), "/");
 	$g = substr($f, strlen($root));
-	$b = igk_getv($_SERVER, 'REQUEST_SCHEME')."://".igk_getv($_SERVER, 'HTTP_HOST');
-	return igk_html_uri($b."/".$g);	
+	$b = igk_str_rm_last(igk_getv($_SERVER, 'REQUEST_SCHEME')."://".igk_getv($_SERVER, 'HTTP_HOST'), "/");
+	return igk_str_rm_last(igk_html_uri($b.$g), "/");	
 }
 ///<summary>get the current lang</summary>
 function igk_cgt_current_lang(){
@@ -62,11 +62,11 @@ return igk_cgt_get_env("cgt://currentlang")??
 	$tab = array();
 	$r = igk_getv($_SERVER, "HTTP_ACCEPT_LANGUAGE");
 	$s = "fr";
-	if ($r){
-		preg_match_all( $regex,  $r ,$tab);
+	// if ($r){
+		// preg_match_all( $regex,  $r ,$tab);
 
-		$s = $tab["name"][0];
-	}
+		// $s = $tab["name"][0];
+	// }
 	igk_cgt_set_env("cgt://currentlang", $s);
 	return $s;
 	
@@ -650,9 +650,15 @@ function igk_cgt_get_urn_display($type, $n){
 	$lang = igk_cgt_current_lang();	
 	$g = $srv->getUrnInfo($type, $n);	
 	$k = "cgt://urndisplay/{$type}/{$n}";	
-	$b = $srv->toObject($g);	
-	$path = "spec/label/[lang={$lang}]/value";	
-	$r = igk_conf_get($b, $path, $n, 0); 
+	$b = igk_conf_load_content($g, "thesaurus");
+		// igk_xml($g);
+		// igk_wln($b);
+		// igk_exit();
+	$r = $n;
+	if ($b){	
+		$path = "spec/label/[lang={$lang}]/value";
+		$r = igk_conf_get($b, $path, $n, 0); 
+	}
 	return $r;
 }
 

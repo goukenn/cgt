@@ -912,6 +912,9 @@ EOF;
 new CGT_Admin();
 
 
+
+
+
 add_filter(IGKWP_FILTERS::NAV_MENU_ITEM, function($i){
 	if(func_num_args()>1){
 		$args = func_get_args()[1];

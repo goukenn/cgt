@@ -13462,6 +13462,9 @@ function igk_io_baseRelativePath($dir, $separator=DIRECTORY_SEPARATOR){
 	}
 	if (IGK_APP_DIR == $dir)
 		return IGK_STR_EMPTY;
+
+	
+	
 	if (igk_io_is_subdir(IGK_APP_DIR , $dir)){
 		return IGKIO::GetChildRelativePath(IGK_APP_DIR, $dir, $separator);
 	}
@@ -13482,6 +13485,7 @@ function igk_io_baseRelativePath($dir, $separator=DIRECTORY_SEPARATOR){
 			break;
 		}
 	}
+
 	// if (($k = strstr(IGK_APP_DIR, $out))){
 		// is a child directory
 		// igk_wln("child dir ".$out. " vs ".IGK_APP_DIR. " || ".$k);
@@ -18596,8 +18600,12 @@ function igk_svg_callable_list($n,$m){
 				foreach($c as $k=>$gg)
 				{
 					$v=igk_getv($g,$k);
+					
+					
+					// igk_wln($v);
+					// igk_exit();
 					if ($v===null){
-						igk_ilog("svg : {$k} no found", __FUNCTION__);
+						//igk_ilog("svg : {$k} no found", __FUNCTION__);
 						continue;
 					}
 					if (!file_exists($v)){
@@ -18746,8 +18754,9 @@ function igk_svg_bindfile($name, $file){
 	$source = igk_app()->Session->getParam(IGK_SVG_REGNODE_KEY);
 	if ($source){
 		$f = $source->getParam("file", function(){ return array();});	
-		$f[$name]= igk_io_basePath($file);	
-		$source->setParam("file", $f);		
+		$f[$name]= igk_io_basePath($file);
+		// igk_wln("register : ".$file. " ".$f[$name]);		
+		$source->setParam("file", igk_io_dir($f));		
 	}
 }
 
@@ -24333,9 +24342,9 @@ final class IGKIO{
 		}
 		return $s;
 	}
-	//retrieve the relative path according the directory
-	public static function GetChildRelativePath($source, $destination, $separator  = DIRECTORY_SEPARATOR)
-	{
+	//retrieve the relative path according the directory	
+	public static function GetChildRelativePath($source, $destination, $separator=DIRECTORY_SEPARATOR)
+	{		
 		$doc_root = $source;
 		$dir = $destination;
 		$i = IGKString::IndexOf($dir,$doc_root);
@@ -24344,25 +24353,26 @@ final class IGKIO{
 			//root document found in dir path
 			$dir = substr($dir, $i + strlen($doc_root));
 		}
-		//not found
-		$dir = str_replace(self::GetRootBaseDir(),IGK_STR_EMPTY, $dir);
-		while( (strlen($dir)>0) && ($dir[0] == DIRECTORY_SEPARATOR))
-		{
+		
+		$basedir = self::GetRootBaseDir();		
+		if ($basedir!= "/")
+			$dir = str_replace($basedir, IGK_STR_EMPTY, $dir);
+	
+		while( (strlen($dir)>0) && ($dir[0] == DIRECTORY_SEPARATOR)){
 			$dir = substr($dir, 1);
 		}
-		return empty($dir)?null:self::__fixPath($dir);
+		return empty($dir)?null:self::__fixPath($dir, $separator);
 	}
-	private static function __fixPath($path, $separator = DIRECTORY_SEPARATOR)
-	{
+	private static function __fixPath($path, $separator = DIRECTORY_SEPARATOR){
 		if ($separator == "/")
 		{
 			$path = preg_replace('/([\/]+)/i', '/', $path);
-
 		}
 		else
 			$path = preg_replace('/([\\'.$separator.']+)/i', ''.$separator.'', $path);
 		return $path;
 	}
+	
 	/// get relative path according to the DOCUMENT_ROOT
 	/// dir = must be a full path to an existing file or directory
 	public static function GetRootRelativePath($dir, $separator = DIRECTORY_SEPARATOR)
@@ -35255,7 +35265,7 @@ implements IIGKdbManager
 	{
 		return IGKMySQLQueryResult::CreateResult($this->sendQuery("SELECT  LAST_INSERT_ID()"));
 	}
-	///update data table
+	//update data table
 	public function update($tbname, $entry, $where=null, $querytabinfo=null)
 	{
 		$this->dieNotConnect();
